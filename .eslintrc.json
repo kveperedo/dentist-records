@@ -7,5 +7,10 @@
 	"extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended", "plugin:tailwindcss/recommended"],
 	"rules": {
 		"tailwindcss/no-custom-classname": [0]
+	},
+	"settings": {
+		"tailwindcss": {
+			"callees": ["twMerge", "classes"]
+		}
 	}
 }
