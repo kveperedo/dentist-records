@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgresql"
     // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.text annotations in model Account below
     // Further reading: 
     // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -61,4 +61,24 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Record {
+    id         String   @id @default(cuid())
+    name       String
+    address    String
+    telephone  String
+    age        Int
+    occupation String
+    status     MaritalStatus @default(single)
+    complaint  String
+    birthday   DateTime
+}
+
+enum MaritalStatus {
+    single
+    married
+    divorced
+    separated
+    widowed
 }
