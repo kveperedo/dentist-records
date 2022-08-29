@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 * {
-    @apply focus-visible:outline-violet-700
+    @apply focus-visible:outline-slate-700
 }
