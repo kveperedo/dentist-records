@@ -68,7 +68,6 @@ model Record {
     name       String
     address    String
     telephone  String
-    age        Int
     occupation String
     status     MaritalStatus @default(single)
     complaint  String
