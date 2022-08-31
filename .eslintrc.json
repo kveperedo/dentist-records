@@ -10,7 +10,8 @@
 	},
 	"settings": {
 		"tailwindcss": {
-			"callees": ["twMerge", "classes"]
+			"callees": ["twMerge", "classNames", "className"],
+			"config": "tailwind.config.cjs"
 		}
 	}
 }

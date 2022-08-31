@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 * {
-    @apply focus-visible:outline-slate-700
+    @apply focus-visible:outline-slate-700 font-poppins
 }
