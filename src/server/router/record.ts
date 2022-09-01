@@ -8,9 +8,10 @@ export const recordRouter = createRouter()
 	.query('all', {
 		input: z.object({
 			pageNumber: z.number().min(1),
+			searchTerm: z.string().optional(),
 		}),
 		async resolve({ ctx, input }) {
-			const { pageNumber } = input;
+			const { pageNumber, searchTerm } = input;
 
 			const [recordCount, records] = await ctx.prisma.$transaction([
 				ctx.prisma.record.count(),
@@ -20,6 +21,7 @@ export const recordRouter = createRouter()
 					orderBy: {
 						name: 'asc',
 					},
+					where: searchTerm ? { name: { contains: searchTerm, mode: 'insensitive' } } : undefined,
 				}),
 			]);
 

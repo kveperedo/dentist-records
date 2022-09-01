@@ -15,10 +15,24 @@ import DatePicker from '../components/DatePicker';
 import dayjs from 'dayjs';
 import { LoadingOverlay, Pagination, ScrollArea } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
+import { useDebouncedValue } from '@mantine/hooks';
+import Image from 'next/image';
 
 const capitalizeFirstLetter = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
 
 type RecordType = z.infer<typeof Record>;
+
+const NoResultsFound = () => {
+	return (
+		<div className='flex h-full flex-col items-center justify-center gap-4'>
+			<Image src='/assets/empty.svg' width={384} height={384} alt='empty record' />
+			<span className='-mt-14 flex flex-col items-center'>
+				<h1 className='text-xl text-slate-700'>No records found</h1>
+				<p className='text-slate-500'>Please try adjusting the search</p>
+			</span>
+		</div>
+	);
+};
 
 export interface RecordFormProps {
 	onSubmit: (values: RecordType) => void;
@@ -103,21 +117,28 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 	);
 };
 
+const SEARCH_INPUT_DEBOUNCE_TIME = 250;
+
 const Home: NextPage = () => {
 	const modals = useModals();
 	const utils = trpc.useContext();
 	const [pageNumber, setPageNumber] = useState(1);
 	const [pageCount, setPageCount] = useState(0);
-	const { data, isLoading: isGetRecordsLoading } = trpc.useQuery(['record.all', { pageNumber }], {
-		onError: (error) => {
-			console.log(error);
-			showNotification({
-				icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
-				title: 'Error',
-				message: 'An error occurred while getting patient records.',
-			});
-		},
-	});
+	const [searchTerm, setSearchTerm] = useState('');
+	const [debouncedSearchTerm] = useDebouncedValue(searchTerm, SEARCH_INPUT_DEBOUNCE_TIME);
+	const { data, isLoading: isGetRecordsLoading } = trpc.useQuery(
+		['record.all', { pageNumber, searchTerm: debouncedSearchTerm }],
+		{
+			onError: (error) => {
+				console.log(error);
+				showNotification({
+					icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+					title: 'Error',
+					message: 'An error occurred while getting patient records.',
+				});
+			},
+		}
+	);
 	const { mutate: addRecord, isLoading: isAddRecordLoading } = trpc.useMutation(['record.add'], {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.all']);
@@ -206,6 +227,8 @@ const Home: NextPage = () => {
 		});
 	};
 
+	const noResultsFound = data?.records && data?.records.length === 0 && debouncedSearchTerm !== '';
+
 	return (
 		<>
 			<Head>
@@ -218,6 +241,8 @@ const Home: NextPage = () => {
 				<main className='container m-auto flex h-screen flex-1 flex-col p-8'>
 					<div className='mb-8 flex items-center '>
 						<TextInput
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
 							rightIcon={
 								<span className='flex h-full w-10 shrink-0 cursor-pointer items-center justify-center'>
 									<MagnifyingGlassIcon className='h-5 w-5 text-slate-500' />
@@ -235,52 +260,56 @@ const Home: NextPage = () => {
 						</Button>
 					</div>
 
-					<ScrollArea className='clip-rounded relative mb-8 flex flex-1'>
-						<LoadingOverlay className='[&_svg]:fill-slate-800' visible={isTableLoading} />
-						<table className='w-full table-auto border-collapse bg-white shadow-sm'>
-							<thead
-								className={`
+					{noResultsFound ? (
+						<NoResultsFound />
+					) : (
+						<ScrollArea className='clip-rounded relative mb-8 flex flex-1'>
+							<LoadingOverlay className='[&_svg]:fill-slate-800' visible={isTableLoading} />
+							<table className='w-full table-auto border-collapse bg-white shadow-sm'>
+								<thead
+									className={`
 								sticky top-0 z-10 table-header-group 
 								border-separate border-b-2 border-slate-500 text-slate-700`}
-							>
-								<tr>
-									<th className='rounded-tl-md bg-slate-200 p-4 py-6 text-left font-semibold'>
-										Name
-									</th>
-									<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
-										Actions
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{data?.records?.map((record) => (
-									<tr
-										className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
-										key={record.id}
-									>
-										<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
-										<td className='rounded-br-md px-4 py-3'>
-											<div className='flex justify-end gap-4'>
-												<Button
-													size='sm'
-													className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
-												>
-													View
-												</Button>
-												<Button
-													onClick={() => handleDeleteRecord(record.id)}
-													size='sm'
-													className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
-												>
-													Delete
-												</Button>
-											</div>
-										</td>
+								>
+									<tr>
+										<th className='rounded-tl-md bg-slate-200 p-4 py-6 text-left font-semibold'>
+											Name
+										</th>
+										<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
+											Actions
+										</th>
 									</tr>
-								))}
-							</tbody>
-						</table>
-					</ScrollArea>
+								</thead>
+								<tbody>
+									{data?.records?.map((record) => (
+										<tr
+											className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
+											key={record.id}
+										>
+											<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
+											<td className='rounded-br-md px-4 py-3'>
+												<div className='flex justify-end gap-4'>
+													<Button
+														size='sm'
+														className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
+													>
+														View
+													</Button>
+													<Button
+														onClick={() => handleDeleteRecord(record.id)}
+														size='sm'
+														className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
+													>
+														Delete
+													</Button>
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</ScrollArea>
+					)}
 
 					<Pagination
 						className='mt-auto'
