@@ -1,10 +1,4 @@
-import {
-	MagnifyingGlassIcon,
-	PlusIcon,
-	CheckCircledIcon,
-	CrossCircledIcon,
-	ArrowUpIcon,
-} from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, PlusIcon, CheckCircledIcon, CrossCircledIcon, ArrowUpIcon } from '@radix-ui/react-icons';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
@@ -271,70 +265,75 @@ const Home: NextPage = () => {
 					{noResultsFound ? (
 						<NoResultsFound />
 					) : (
-						<ScrollArea className='clip-rounded relative mb-8 flex flex-1'>
-							<LoadingOverlay className='[&_svg]:fill-slate-800' visible={isTableLoading} />
-							<table className='w-full table-auto border-collapse bg-white shadow-sm'>
-								<thead
-									className={`
+						<div className='mb-8 flex flex-1 overflow-hidden shadow-md bg-white rounded'>
+							<ScrollArea
+								className='clip-rounded relative flex flex-1'
+								classNames={{ viewport: 'h-full' }}
+							>
+								<LoadingOverlay className='[&_svg]:fill-slate-800' visible={isTableLoading} />
+								<table className='h-full w-full table-auto border-collapse bg-white shadow-sm'>
+									<thead
+										className={`
 								sticky top-0 z-10 table-header-group 
 								border-separate border-b-2 border-slate-500 text-slate-700`}
-								>
-									<tr>
-										<th
-											onClick={() => setIsSortedAsc((prev) => !prev)}
-											className={twMerge(
-												`cursor-pointer rounded-tl-md bg-slate-200 p-4 py-6 
+									>
+										<tr>
+											<th
+												onClick={() => setIsSortedAsc((prev) => !prev)}
+												className={twMerge(
+													`cursor-pointer rounded-tl-md bg-slate-200 p-4 py-6 
 												text-left font-semibold transition-colors 
 												hover:bg-slate-300
 												`
-											)}
-										>
-											<div className='flex items-center gap-2'>
-												<p>Name</p>
-												{
-													<ArrowUpIcon
-														className={twMerge(
-															'h-5 w-5 transition-transform',
-															!isSortedAsc && 'rotate-180'
-														)}
-													/>
-												}
-											</div>
-										</th>
-										<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
-											Actions
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									{data?.records?.map((record) => (
-										<tr
-											className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
-											key={record.id}
-										>
-											<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
-											<td className='rounded-br-md px-4 py-3'>
-												<div className='flex justify-end gap-4'>
-													<Button
-														size='sm'
-														className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
-													>
-														View
-													</Button>
-													<Button
-														onClick={() => handleDeleteRecord(record.id)}
-														size='sm'
-														className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
-													>
-														Delete
-													</Button>
+												)}
+											>
+												<div className='flex items-center gap-2'>
+													<p>Name</p>
+													{
+														<ArrowUpIcon
+															className={twMerge(
+																'h-5 w-5 transition-transform',
+																!isSortedAsc && 'rotate-180'
+															)}
+														/>
+													}
 												</div>
-											</td>
+											</th>
+											<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
+												Actions
+											</th>
 										</tr>
-									))}
-								</tbody>
-							</table>
-						</ScrollArea>
+									</thead>
+									<tbody>
+										{data?.records?.map((record) => (
+											<tr
+												className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
+												key={record.id}
+											>
+												<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
+												<td className='rounded-br-md px-4 py-3'>
+													<div className='flex justify-end gap-4'>
+														<Button
+															size='sm'
+															className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
+														>
+															View
+														</Button>
+														<Button
+															onClick={() => handleDeleteRecord(record.id)}
+															size='sm'
+															className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
+														>
+															Delete
+														</Button>
+													</div>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</ScrollArea>
+						</div>
 					)}
 
 					<Pagination
