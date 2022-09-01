@@ -2,12 +2,31 @@ import { z } from 'zod';
 import { Record } from '../../types/schema';
 import { createRouter } from './context';
 
+const MAX_NUMBER_OF_RECORDS_PER_QUERY = 20;
+
 export const recordRouter = createRouter()
 	.query('all', {
-		async resolve({ ctx }) {
-			const records = await ctx.prisma.record.findMany();
+		input: z.object({
+			pageNumber: z.number().min(1),
+		}),
+		async resolve({ ctx, input }) {
+			const { pageNumber } = input;
 
-			return records;
+			const [recordCount, records] = await ctx.prisma.$transaction([
+				ctx.prisma.record.count(),
+				ctx.prisma.record.findMany({
+					skip: (pageNumber - 1) * MAX_NUMBER_OF_RECORDS_PER_QUERY,
+					take: MAX_NUMBER_OF_RECORDS_PER_QUERY,
+					orderBy: {
+						name: 'asc',
+					},
+				}),
+			]);
+
+			return {
+				pageCount: Math.ceil(recordCount / MAX_NUMBER_OF_RECORDS_PER_QUERY),
+				records,
+			};
 		},
 	})
 	.mutation('add', {

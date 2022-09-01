@@ -7,13 +7,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Record, RecordStatus } from '../types/schema';
 import { z } from 'zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import TextInput from '../components/TextInput';
 import { useModals } from '@mantine/modals';
 import Select from '../components/Select';
 import DatePicker from '../components/DatePicker';
 import dayjs from 'dayjs';
-import { LoadingOverlay } from '@mantine/core';
+import { LoadingOverlay, Pagination, ScrollArea } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 
 const capitalizeFirstLetter = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
@@ -106,7 +106,18 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 const Home: NextPage = () => {
 	const modals = useModals();
 	const utils = trpc.useContext();
-	const { data: records, isLoading: isGetRecordsLoading } = trpc.useQuery(['record.all']);
+	const [pageNumber, setPageNumber] = useState(1);
+	const [pageCount, setPageCount] = useState(0);
+	const { data, isLoading: isGetRecordsLoading } = trpc.useQuery(['record.all', { pageNumber }], {
+		onError: (error) => {
+			console.log(error);
+			showNotification({
+				icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+				title: 'Error',
+				message: 'An error occurred while getting patient records.',
+			});
+		},
+	});
 	const { mutate: addRecord, isLoading: isAddRecordLoading } = trpc.useMutation(['record.add'], {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.all']);
@@ -125,13 +136,32 @@ const Home: NextPage = () => {
 			});
 		},
 	});
-	const isLoading = isGetRecordsLoading || isAddRecordLoading;
+	const { mutate: deleteRecord, isLoading: isDeleteRecordLoading } = trpc.useMutation(['record.delete'], {
+		onSuccess: () => {
+			utils.invalidateQueries(['record.all']);
+			showNotification({
+				icon: <CheckCircledIcon className='h-5 w-5 text-green-500' />,
+				title: 'Delete Record',
+				message: "Successfully deleted the patient's records.",
+			});
+		},
+		onError: (error) => {
+			console.log(error);
+			showNotification({
+				icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+				title: 'Error',
+				message: "An error occurred while deleting the patient's records.",
+			});
+		},
+	});
 
-	if (isLoading) {
-		return (
-			<LoadingOverlay className='[&_svg]:fill-slate-800' visible loaderProps={{ size: 'xl' }} />
-		);
-	}
+	useEffect(() => {
+		if (data?.pageCount) {
+			setPageCount(data.pageCount);
+		}
+	}, [data?.pageCount]);
+
+	const isTableLoading = isGetRecordsLoading || isAddRecordLoading || isDeleteRecordLoading;
 
 	const handleAddRecord = () => {
 		const modalId = modals.openModal({
@@ -149,6 +179,33 @@ const Home: NextPage = () => {
 		});
 	};
 
+	const handleDeleteRecord = (id: string) => {
+		const modalId = modals.openModal({
+			title: 'Delete record',
+			children: (
+				<>
+					<p className='text-slate-600'>Are you sure you want to delete this record?</p>
+					<div className='mt-4 flex justify-end gap-4'>
+						<Button
+							onClick={() => modals.closeModal(modalId)}
+							className='bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200'
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={() => {
+								modals.closeModal(modalId);
+								deleteRecord(id);
+							}}
+						>
+							Delete Record
+						</Button>
+					</div>
+				</>
+			),
+		});
+	};
+
 	return (
 		<>
 			<Head>
@@ -158,7 +215,7 @@ const Home: NextPage = () => {
 			</Head>
 
 			<div className='min-h-screen bg-slate-100'>
-				<main className='container m-auto flex flex-1 flex-col p-8'>
+				<main className='container m-auto flex h-screen flex-1 flex-col p-8'>
 					<div className='mb-8 flex items-center '>
 						<TextInput
 							rightIcon={
@@ -178,42 +235,70 @@ const Home: NextPage = () => {
 						</Button>
 					</div>
 
-					<table className='flex-1 table-auto border-collapse rounded bg-white shadow-sm'>
-						<thead className='table-header-group border-collapse border-b-2 border-slate-500 text-slate-700'>
-							<tr>
-								<th className='rounded-tl-md bg-slate-200 p-4 py-6 text-left font-semibold'>Name</th>
-								<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{records?.map((record) => (
-								<tr
-									className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
-									key={record.id}
-								>
-									<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
-									<td className='rounded-br-md px-4 py-3'>
-										<div className='flex justify-end gap-4'>
-											<Button
-												size='sm'
-												className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
-											>
-												View
-											</Button>
-											<Button
-												size='sm'
-												className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
-											>
-												Delete
-											</Button>
-										</div>
-									</td>
+					<ScrollArea className='clip-rounded relative mb-8 flex flex-1'>
+						<LoadingOverlay className='[&_svg]:fill-slate-800' visible={isTableLoading} />
+						<table className='w-full table-auto border-collapse bg-white shadow-sm'>
+							<thead
+								className={`
+								sticky top-0 z-10 table-header-group 
+								border-separate border-b-2 border-slate-500 text-slate-700`}
+							>
+								<tr>
+									<th className='rounded-tl-md bg-slate-200 p-4 py-6 text-left font-semibold'>
+										Name
+									</th>
+									<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
+										Actions
+									</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{data?.records?.map((record) => (
+									<tr
+										className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
+										key={record.id}
+									>
+										<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
+										<td className='rounded-br-md px-4 py-3'>
+											<div className='flex justify-end gap-4'>
+												<Button
+													size='sm'
+													className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
+												>
+													View
+												</Button>
+												<Button
+													onClick={() => handleDeleteRecord(record.id)}
+													size='sm'
+													className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
+												>
+													Delete
+												</Button>
+											</div>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</ScrollArea>
+
+					<Pagination
+						className='mt-auto'
+						classNames={{
+							item: `
+							text-slate-800 [&[data-active]]:bg-slate-600 
+							[&[data-active]]:text-slate-50 text-base font-poppins
+							border-slate-200 enabled:hover:border-slate-300 bg-white
+							font-normal transition-colors disabled:bg-slate-300
+							`,
+						}}
+						page={pageNumber}
+						total={pageCount}
+						onChange={setPageNumber}
+						position='center'
+						withControls
+						withEdges
+					/>
 				</main>
 			</div>
 		</>
