@@ -1,4 +1,10 @@
-import { MagnifyingGlassIcon, PlusIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import {
+	MagnifyingGlassIcon,
+	PlusIcon,
+	CheckCircledIcon,
+	CrossCircledIcon,
+	ArrowUpIcon,
+} from '@radix-ui/react-icons';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
@@ -17,6 +23,7 @@ import { LoadingOverlay, Pagination, ScrollArea } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useDebouncedValue } from '@mantine/hooks';
 import Image from 'next/image';
+import { twMerge } from 'tailwind-merge';
 
 const capitalizeFirstLetter = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
 
@@ -125,9 +132,10 @@ const Home: NextPage = () => {
 	const [pageNumber, setPageNumber] = useState(1);
 	const [pageCount, setPageCount] = useState(0);
 	const [searchTerm, setSearchTerm] = useState('');
+	const [isSortedAsc, setIsSortedAsc] = useState(true);
 	const [debouncedSearchTerm] = useDebouncedValue(searchTerm, SEARCH_INPUT_DEBOUNCE_TIME);
 	const { data, isLoading: isGetRecordsLoading } = trpc.useQuery(
-		['record.all', { pageNumber, searchTerm: debouncedSearchTerm }],
+		['record.all', { pageNumber, searchTerm: debouncedSearchTerm, sortType: isSortedAsc ? 'asc' : 'desc' }],
 		{
 			onError: (error) => {
 				console.log(error);
@@ -272,8 +280,26 @@ const Home: NextPage = () => {
 								border-separate border-b-2 border-slate-500 text-slate-700`}
 								>
 									<tr>
-										<th className='rounded-tl-md bg-slate-200 p-4 py-6 text-left font-semibold'>
-											Name
+										<th
+											onClick={() => setIsSortedAsc((prev) => !prev)}
+											className={twMerge(
+												`cursor-pointer rounded-tl-md bg-slate-200 p-4 py-6 
+												text-left font-semibold transition-colors 
+												hover:bg-slate-300
+												`
+											)}
+										>
+											<div className='flex items-center gap-2'>
+												<p>Name</p>
+												{
+													<ArrowUpIcon
+														className={twMerge(
+															'h-5 w-5 transition-transform',
+															!isSortedAsc && 'rotate-180'
+														)}
+													/>
+												}
+											</div>
 										</th>
 										<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
 											Actions

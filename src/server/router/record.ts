@@ -9,9 +9,10 @@ export const recordRouter = createRouter()
 		input: z.object({
 			pageNumber: z.number().min(1),
 			searchTerm: z.string().optional(),
+			sortType: z.enum(['asc', 'desc']),
 		}),
 		async resolve({ ctx, input }) {
-			const { pageNumber, searchTerm } = input;
+			const { pageNumber, searchTerm, sortType } = input;
 
 			const [recordCount, records] = await ctx.prisma.$transaction([
 				ctx.prisma.record.count(),
@@ -19,7 +20,7 @@ export const recordRouter = createRouter()
 					skip: (pageNumber - 1) * MAX_NUMBER_OF_RECORDS_PER_QUERY,
 					take: MAX_NUMBER_OF_RECORDS_PER_QUERY,
 					orderBy: {
-						name: 'asc',
+						name: sortType,
 					},
 					where: searchTerm ? { name: { contains: searchTerm, mode: 'insensitive' } } : undefined,
 				}),
