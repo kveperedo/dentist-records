@@ -8,6 +8,7 @@ import '../styles/globals.css';
 import { MantineProvider } from '@mantine/core';
 import { emotionCache } from '../styles/emotion-cache';
 import { ModalsProvider } from '@mantine/modals';
+import { NotificationsProvider } from '@mantine/notifications';
 
 const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => {
 	return (
@@ -18,21 +19,35 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 				theme={{
 					fontFamily: 'Poppins',
 					cursorType: 'pointer',
+					loader: 'bars',
+					components: {
+						Notification: {
+							classNames: {
+								root: 'shadow-sm p-3 before:hidden',
+								title: 'text-base text-slate-700',
+								description: 'text-sm text-slate-500',
+								icon: 'bg-transparent mr-2',
+								closeButton: '[&>svg]:w-5 [&>svg]:h-5 text-slate-600',
+							},
+						},
+					},
 				}}
 				emotionCache={emotionCache}
 			>
-				<ModalsProvider
-					modalProps={{
-						classNames: {
-							title: `text-xl font-medium text-slate-800`,
-							close: `[&>svg]:w-5 [&>svg]:h-5 text-slate-600 focus-visible:outline-slate-700`,
-							modal: `p-8`,
-						},
-						centered: true,
-					}}
-				>
-					<Component {...pageProps} />
-				</ModalsProvider>
+				<NotificationsProvider>
+					<ModalsProvider
+						modalProps={{
+							classNames: {
+								title: `text-xl font-medium text-slate-800`,
+								close: `[&>svg]:w-5 [&>svg]:h-5 text-slate-600 focus-visible:outline-slate-700`,
+								modal: `p-8`,
+							},
+							centered: true,
+						}}
+					>
+						<Component {...pageProps} />
+					</ModalsProvider>
+				</NotificationsProvider>
 			</MantineProvider>
 		</SessionProvider>
 	);

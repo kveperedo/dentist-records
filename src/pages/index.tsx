@@ -1,10 +1,153 @@
-import { PlusIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, PlusIcon, CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
+import Button from '../components/Button';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Record, RecordStatus } from '../types/schema';
+import { z } from 'zod';
+import { useEffect } from 'react';
+import TextInput from '../components/TextInput';
+import { useModals } from '@mantine/modals';
+import Select from '../components/Select';
+import DatePicker from '../components/DatePicker';
+import dayjs from 'dayjs';
+import { LoadingOverlay } from '@mantine/core';
+import { showNotification } from '@mantine/notifications';
+
+const capitalizeFirstLetter = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
+
+type RecordType = z.infer<typeof Record>;
+
+export interface RecordFormProps {
+	onSubmit: (values: RecordType) => void;
+	onClose?: () => void;
+	existingData?: RecordType;
+}
+
+const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
+	const { register, control, reset, handleSubmit } = useForm<RecordType>({
+		resolver: zodResolver(Record),
+		defaultValues: {
+			status: RecordStatus.enum.single,
+			birthday: new Date(),
+		},
+	});
+
+	const handleFormSubmit = (values: RecordType) => {
+		onSubmit(values);
+	};
+
+	useEffect(() => {
+		if (existingData) {
+			reset(existingData);
+		}
+	}, [existingData, reset]);
+
+	return (
+		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex flex-col gap-4'>
+			<TextInput required label='Name' {...register('name')} />
+			<div className='flex gap-4'>
+				<TextInput required className='flex-1' label='Occupation' {...register('occupation')} />
+				<Controller
+					control={control}
+					name='status'
+					render={({ field }) => (
+						<Select
+							required
+							className='flex-1'
+							label='Status'
+							{...field}
+							data={Object.values(RecordStatus.enum).map((status) => ({
+								value: status,
+								label: capitalizeFirstLetter(status),
+							}))}
+						/>
+					)}
+				/>
+				<Controller
+					control={control}
+					name='birthday'
+					render={({ field: { name, onChange, ref, value } }) => {
+						return (
+							<DatePicker
+								required
+								label='Birthday'
+								name={name}
+								initialLevel='year'
+								ref={ref}
+								value={value ? dayjs(value).toDate() : null}
+								onChange={onChange}
+							/>
+						);
+					}}
+				/>
+			</div>
+			<TextInput required label='Address' {...register('address')} />
+			<div className='flex gap-4'>
+				<TextInput required className='flex-1' label='Complaint' {...register('complaint')} />
+				<TextInput required className='flex-1' label='Telephone' {...register('telephone')} />
+			</div>
+
+			<div className='mt-4 flex justify-end gap-4'>
+				<Button
+					onClick={onClose}
+					className='bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200'
+				>
+					Cancel
+				</Button>
+				<Button type='submit'>Submit</Button>
+			</div>
+		</form>
+	);
+};
 
 const Home: NextPage = () => {
-	const hello = trpc.useQuery(['example.hello', { text: 'from tRPC' }]);
+	const modals = useModals();
+	const utils = trpc.useContext();
+	const { data: records, isLoading: isGetRecordsLoading } = trpc.useQuery(['record.all']);
+	const { mutate: addRecord, isLoading: isAddRecordLoading } = trpc.useMutation(['record.add'], {
+		onSuccess: () => {
+			utils.invalidateQueries(['record.all']);
+			showNotification({
+				icon: <CheckCircledIcon className='h-5 w-5 text-green-500' />,
+				title: 'Add Record',
+				message: 'Successfully added patient to records.',
+			});
+		},
+		onError: (error) => {
+			console.log(error);
+			showNotification({
+				icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+				title: 'Error',
+				message: 'An error occurred while adding patient to records.',
+			});
+		},
+	});
+	const isLoading = isGetRecordsLoading || isAddRecordLoading;
+
+	if (isLoading) {
+		return (
+			<LoadingOverlay className='[&_svg]:fill-slate-800' visible loaderProps={{ size: 'xl' }} />
+		);
+	}
+
+	const handleAddRecord = () => {
+		const modalId = modals.openModal({
+			title: 'Add Record',
+			children: (
+				<RecordForm
+					onSubmit={(values) => {
+						modals.closeModal(modalId);
+						addRecord(values);
+					}}
+					onClose={() => modals.closeModal(modalId)}
+				/>
+			),
+			className: '[&_.mantine-Modal-modal]:w-[768px]',
+		});
+	};
 
 	return (
 		<>
@@ -14,17 +157,63 @@ const Home: NextPage = () => {
 				<link rel='icon' href='/favicon.ico' />
 			</Head>
 
-			<div className='flex min-h-screen'>
-				<nav className='w-48 p-4 shadow'>Dental Records</nav>
-				<main className='flex flex-1 flex-col bg-slate-100 p-4'>
-					<div className='mb-4 flex items-center'>
-						<h1 className='text-xl font-bold'>Dental Records</h1>
-						<button className='ml-auto flex items-center gap-2 bg-violet-100 py-2 px-4 font-medium text-violet-600 transition-all hover:bg-violet-200 active:bg-violet-300'>
-							<PlusIcon className='h-4 w-4 text-base text-inherit' />
+			<div className='min-h-screen bg-slate-100'>
+				<main className='container m-auto flex flex-1 flex-col p-8'>
+					<div className='mb-8 flex items-center '>
+						<TextInput
+							rightIcon={
+								<span className='flex h-full w-10 shrink-0 cursor-pointer items-center justify-center'>
+									<MagnifyingGlassIcon className='h-5 w-5 text-slate-500' />
+								</span>
+							}
+							placeholder='Search users'
+						/>
+
+						<Button
+							onClick={handleAddRecord}
+							className='ml-auto'
+							leftIcon={<PlusIcon className='h-5 w-5 text-base text-inherit' />}
+						>
 							Add Record
-						</button>
+						</Button>
 					</div>
-					<div className='flex-1 bg-white p-4'>Table</div>
+
+					<table className='flex-1 table-auto border-collapse rounded bg-white shadow-sm'>
+						<thead className='table-header-group border-collapse border-b-2 border-slate-500 text-slate-700'>
+							<tr>
+								<th className='rounded-tl-md bg-slate-200 p-4 py-6 text-left font-semibold'>Name</th>
+								<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
+									Actions
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{records?.map((record) => (
+								<tr
+									className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
+									key={record.id}
+								>
+									<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
+									<td className='rounded-br-md px-4 py-3'>
+										<div className='flex justify-end gap-4'>
+											<Button
+												size='sm'
+												className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
+											>
+												View
+											</Button>
+											<Button
+												size='sm'
+												className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'
+											>
+												Delete
+											</Button>
+										</div>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
 				</main>
 			</div>
 		</>
