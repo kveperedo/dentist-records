@@ -36,6 +36,18 @@ export const recordRouter = createRouter()
 			};
 		},
 	})
+	.query('specific', {
+		input: z.string(),
+		async resolve({ ctx, input }) {
+			const record = await ctx.prisma.record.findFirst({
+				where: {
+					id: input,
+				},
+			});
+
+			return record;
+		},
+	})
 	.mutation('add', {
 		input: Record.omit({ id: true }),
 		async resolve({ ctx, input }) {
