@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, PlusIcon, CheckCircledIcon, CrossCircledIcon, ArrowUpIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, PlusIcon, ArrowUpIcon } from '@radix-ui/react-icons';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
