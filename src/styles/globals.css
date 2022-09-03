@@ -3,5 +3,11 @@
 @tailwind utilities;
 
 * {
-    @apply focus-visible:outline-slate-700 font-poppins
+	@apply focus-visible:outline-slate-700 font-poppins;
+}
+
+@layer utilities {
+	.clip-rounded {
+		clip-path: inset(0px round 4px 4px 4px 4px);
+	}
 }
