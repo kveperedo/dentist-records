@@ -3,25 +3,17 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
 import Button from '../components/Button';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Record, RecordStatus } from '../types/schema';
-import { z } from 'zod';
 import { useEffect, useState } from 'react';
 import TextInput from '../components/TextInput';
 import { useModals } from '@mantine/modals';
-import Select from '../components/Select';
-import DatePicker from '../components/DatePicker';
-import dayjs from 'dayjs';
-import { LoadingOverlay, Pagination, ScrollArea } from '@mantine/core';
-import { showNotification } from '@mantine/notifications';
+import { Pagination, ScrollArea } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import Image from 'next/image';
-import { twMerge } from 'tailwind-merge';
-
-const capitalizeFirstLetter = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
-
-type RecordType = z.infer<typeof Record>;
+import { join } from 'tailwind-merge';
+import { useRouter } from 'next/router';
+import LoadingOverlay from '../components/LoadingOverlay';
+import RecordForm from '../features/record/RecordForm';
+import { showNotification } from '../utils/mantine';
 
 const NoResultsFound = () => {
 	return (
@@ -35,94 +27,12 @@ const NoResultsFound = () => {
 	);
 };
 
-export interface RecordFormProps {
-	onSubmit: (values: RecordType) => void;
-	onClose?: () => void;
-	existingData?: RecordType;
-}
-
-const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
-	const { register, control, reset, handleSubmit } = useForm<RecordType>({
-		resolver: zodResolver(Record),
-		defaultValues: {
-			status: RecordStatus.enum.single,
-			birthday: new Date(),
-		},
-	});
-
-	const handleFormSubmit = (values: RecordType) => {
-		onSubmit(values);
-	};
-
-	useEffect(() => {
-		if (existingData) {
-			reset(existingData);
-		}
-	}, [existingData, reset]);
-
-	return (
-		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex flex-col gap-4'>
-			<TextInput required label='Name' {...register('name')} />
-			<div className='flex gap-4'>
-				<TextInput required className='flex-1' label='Occupation' {...register('occupation')} />
-				<Controller
-					control={control}
-					name='status'
-					render={({ field }) => (
-						<Select
-							required
-							className='flex-1'
-							label='Status'
-							{...field}
-							data={Object.values(RecordStatus.enum).map((status) => ({
-								value: status,
-								label: capitalizeFirstLetter(status),
-							}))}
-						/>
-					)}
-				/>
-				<Controller
-					control={control}
-					name='birthday'
-					render={({ field: { name, onChange, ref, value } }) => {
-						return (
-							<DatePicker
-								required
-								label='Birthday'
-								name={name}
-								initialLevel='year'
-								ref={ref}
-								value={value ? dayjs(value).toDate() : null}
-								onChange={onChange}
-							/>
-						);
-					}}
-				/>
-			</div>
-			<TextInput required label='Address' {...register('address')} />
-			<div className='flex gap-4'>
-				<TextInput required className='flex-1' label='Complaint' {...register('complaint')} />
-				<TextInput required className='flex-1' label='Telephone' {...register('telephone')} />
-			</div>
-
-			<div className='mt-4 flex justify-end gap-4'>
-				<Button
-					onClick={onClose}
-					className='bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200'
-				>
-					Cancel
-				</Button>
-				<Button type='submit'>Submit</Button>
-			</div>
-		</form>
-	);
-};
-
 const SEARCH_INPUT_DEBOUNCE_TIME = 250;
 
-const Home: NextPage = () => {
+const HomePage: NextPage = () => {
 	const modals = useModals();
 	const utils = trpc.useContext();
+	const router = useRouter();
 	const [pageNumber, setPageNumber] = useState(1);
 	const [pageCount, setPageCount] = useState(0);
 	const [searchTerm, setSearchTerm] = useState('');
@@ -134,7 +44,7 @@ const Home: NextPage = () => {
 			onError: (error) => {
 				console.log(error);
 				showNotification({
-					icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+					status: 'error',
 					title: 'Error',
 					message: 'An error occurred while getting patient records.',
 				});
@@ -145,7 +55,7 @@ const Home: NextPage = () => {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.all']);
 			showNotification({
-				icon: <CheckCircledIcon className='h-5 w-5 text-green-500' />,
+				status: 'success',
 				title: 'Add Record',
 				message: 'Successfully added patient to records.',
 			});
@@ -153,7 +63,7 @@ const Home: NextPage = () => {
 		onError: (error) => {
 			console.log(error);
 			showNotification({
-				icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+				status: 'error',
 				title: 'Error',
 				message: 'An error occurred while adding patient to records.',
 			});
@@ -163,7 +73,7 @@ const Home: NextPage = () => {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.all']);
 			showNotification({
-				icon: <CheckCircledIcon className='h-5 w-5 text-green-500' />,
+				status: 'success',
 				title: 'Delete Record',
 				message: "Successfully deleted the patient's records.",
 			});
@@ -171,7 +81,7 @@ const Home: NextPage = () => {
 		onError: (error) => {
 			console.log(error);
 			showNotification({
-				icon: <CrossCircledIcon className='h-5 w-5 text-red-500' />,
+				status: 'error',
 				title: 'Error',
 				message: "An error occurred while deleting the patient's records.",
 			});
@@ -265,12 +175,12 @@ const Home: NextPage = () => {
 					{noResultsFound ? (
 						<NoResultsFound />
 					) : (
-						<div className='mb-8 flex flex-1 overflow-hidden shadow-md bg-white rounded'>
+						<div className='mb-8 flex flex-1 overflow-hidden rounded bg-white shadow-md'>
 							<ScrollArea
 								className='clip-rounded relative flex flex-1'
 								classNames={{ viewport: 'h-full' }}
 							>
-								<LoadingOverlay className='[&_svg]:fill-slate-800' visible={isTableLoading} />
+								<LoadingOverlay visible={isTableLoading} />
 								<table className='h-full w-full table-auto border-collapse bg-white shadow-sm'>
 									<thead
 										className={`
@@ -280,7 +190,7 @@ const Home: NextPage = () => {
 										<tr>
 											<th
 												onClick={() => setIsSortedAsc((prev) => !prev)}
-												className={twMerge(
+												className={join(
 													`cursor-pointer rounded-tl-md bg-slate-200 p-4 py-6 
 												text-left font-semibold transition-colors 
 												hover:bg-slate-300
@@ -291,7 +201,7 @@ const Home: NextPage = () => {
 													<p>Name</p>
 													{
 														<ArrowUpIcon
-															className={twMerge(
+															className={join(
 																'h-5 w-5 transition-transform',
 																!isSortedAsc && 'rotate-180'
 															)}
@@ -314,6 +224,7 @@ const Home: NextPage = () => {
 												<td className='rounded-br-md px-4 py-3'>
 													<div className='flex justify-end gap-4'>
 														<Button
+															onClick={() => router.push(`/records/${record.id}`)}
 															size='sm'
 															className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
 														>
@@ -359,4 +270,4 @@ const Home: NextPage = () => {
 	);
 };
 
-export default Home;
+export default HomePage;
