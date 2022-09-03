@@ -22,6 +22,10 @@ export const recordRouter = createRouter()
 					orderBy: {
 						name: sortType,
 					},
+					select: {
+						id: true,
+						name: true,
+					},
 					where: searchTerm ? { name: { contains: searchTerm, mode: 'insensitive' } } : undefined,
 				}),
 			]);
