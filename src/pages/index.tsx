@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import LoadingOverlay from '../components/LoadingOverlay';
 import RecordForm from '../features/record/RecordForm';
 import { showNotification } from '../utils/mantine';
+import Link from 'next/link';
 
 const NoResultsFound = () => {
 	return (
@@ -119,10 +120,7 @@ const HomePage: NextPage = () => {
 				<>
 					<p className='text-slate-600'>Are you sure you want to delete this record?</p>
 					<div className='mt-4 flex justify-end gap-4'>
-						<Button
-							onClick={() => modals.closeModal(modalId)}
-							className='bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200'
-						>
+						<Button variant='outlined' onClick={() => modals.closeModal(modalId)}>
 							Cancel
 						</Button>
 						<Button
@@ -223,14 +221,14 @@ const HomePage: NextPage = () => {
 												<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
 												<td className='rounded-br-md px-4 py-3'>
 													<div className='flex justify-end gap-4'>
+														<Link href={`/records/${record.id}`}>
+															<Button variant='secondary' size='sm'>
+																View
+															</Button>
+														</Link>
+
 														<Button
-															onClick={() => router.push(`/records/${record.id}`)}
-															size='sm'
-															className='border-transparent bg-slate-200 text-slate-700 transition-colors hover:bg-slate-300 active:bg-slate-400'
-														>
-															View
-														</Button>
-														<Button
+															variant='outlined'
 															onClick={() => handleDeleteRecord(record.id)}
 															size='sm'
 															className='border:bg-slate-400 border-slate-200 bg-transparent  text-slate-700 transition-colors hover:border-slate-300 hover:bg-transparent active:bg-slate-100'

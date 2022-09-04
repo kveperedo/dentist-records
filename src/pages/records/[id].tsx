@@ -1,10 +1,11 @@
 import { ScrollArea } from '@mantine/core';
 import { useModals } from '@mantine/modals';
-import { ArrowLeftIcon, Pencil1Icon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
 import dayjs from 'dayjs';
-import { NextPage } from 'next';
+import { GetServerSideProps, NextPage } from 'next';
+import { unstable_getServerSession } from 'next-auth';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { join } from 'tailwind-merge';
 import Button from '../../components/Button';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import TextInput from '../../components/TextInput';
@@ -12,6 +13,7 @@ import RecordForm from '../../features/record/RecordForm';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
+import { authOptions } from '../api/auth/[...nextauth]';
 
 const getAge = (dateOfBirth: Date) => {
 	const date = dayjs(dateOfBirth);
@@ -71,25 +73,21 @@ const RecordPage: NextPage = () => {
 				<div className='relative flex w-full flex-1 flex-col gap-8'>
 					<LoadingOverlay visible={isLoading} />
 					{data && (
-						<div className='flex h-full divide-x-2 divide-slate-200 rounded bg-white shadow'>
+						<div className='flex h-full divide-x-2 divide-slate-200 rounded bg-white shadow-md'>
 							<div className='flex flex-1 flex-col'>
 								<div className='m-4 flex justify-between'>
+									<Link href='/'>
+										<Button
+											variant='ghost'
+											leftIcon={<ArrowLeftIcon className='h-5 w-5 text-slate-600' />}
+										>
+											Go back
+										</Button>
+									</Link>
+
 									<Button
-										onClick={() => router.back()}
-										className={join(`
-									border-transparent bg-transparent text-slate-600
-									hover:border-slate-600 hover:bg-slate-100 active:bg-slate-200
-									`)}
-										leftIcon={<ArrowLeftIcon className='h-5 w-5 text-slate-600' />}
-									>
-										Go back
-									</Button>
-									<Button
+										variant='secondary'
 										onClick={handleEditRecord}
-										className={join(`
-										border-transparent bg-slate-200 text-slate-700 transition-colors 
-										hover:bg-slate-300 active:bg-slate-400
-									`)}
 										leftIcon={<Pencil1Icon className='h-5 w-5' />}
 									>
 										Edit Record
@@ -120,7 +118,11 @@ const RecordPage: NextPage = () => {
 									</div>
 								</ScrollArea>
 							</div>
-							<div className='flex-[2]'></div>
+							<div className='flex-[2] bg-slate-200 rounded-r p-4'>
+								<div className='flex justify-end'>
+									<Button leftIcon={<PlusIcon />}>Add Transaction</Button>
+								</div>
+							</div>
 						</div>
 					)}
 				</div>
