@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon, PlusIcon, ArrowUpIcon } from '@radix-ui/react-icons';
-import type { NextPage } from 'next';
+import type { GetServerSideProps, NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
 import Button from '../components/Button';
@@ -15,6 +15,8 @@ import LoadingOverlay from '../components/LoadingOverlay';
 import RecordForm from '../features/record/RecordForm';
 import { showNotification } from '../utils/mantine';
 import Link from 'next/link';
+import { unstable_getServerSession } from 'next-auth';
+import { authOptions } from './api/auth/[...nextauth]';
 
 const NoResultsFound = () => {
 	return (
@@ -269,3 +271,23 @@ const HomePage: NextPage = () => {
 };
 
 export default HomePage;
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+	const session = await unstable_getServerSession(req, res, authOptions);
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: '/sign-in',
+				permanent: true,
+			},
+			props: {},
+		};
+	}
+
+	return {
+		props: {
+			session,
+		},
+	};
+};

@@ -132,3 +132,23 @@ const RecordPage: NextPage = () => {
 };
 
 export default RecordPage;
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+	const session = await unstable_getServerSession(req, res, authOptions);
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: '/sign-in',
+				permanent: true,
+			},
+			props: {},
+		};
+	}
+
+	return {
+		props: {
+			session,
+		},
+	};
+};
