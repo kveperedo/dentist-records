@@ -2,8 +2,8 @@ import { ScrollArea } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
 import dayjs from 'dayjs';
-import { GetServerSideProps, NextPage } from 'next';
-import { unstable_getServerSession } from 'next-auth';
+import { NextPage } from 'next';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Button from '../../components/Button';
@@ -13,7 +13,6 @@ import RecordForm from '../../features/record/RecordForm';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
-import { authOptions } from '../api/auth/[...nextauth]';
 
 const getAge = (dateOfBirth: Date) => {
 	const date = dayjs(dateOfBirth);
@@ -25,6 +24,7 @@ const RecordPage: NextPage = () => {
 	const modals = useModals();
 	const id = router.query.id as string;
 	const utils = trpc.useContext();
+	const { status } = useSession();
 	const { data, isLoading: isGetRecordLoading } = trpc.useQuery(['record.specific', id], { enabled: !!id });
 	const { mutate: editRecord, isLoading: isEditRecordLoading } = trpc.useMutation(['record.edit'], {
 		onSuccess: () => {
@@ -66,6 +66,10 @@ const RecordPage: NextPage = () => {
 			className: '[&_.mantine-Modal-modal]:w-[768px]',
 		});
 	};
+
+	if (status === 'unauthenticated') {
+		router.replace('/sign-in');
+	}
 
 	return (
 		<div className='min-h-screen bg-slate-100'>
@@ -132,23 +136,3 @@ const RecordPage: NextPage = () => {
 };
 
 export default RecordPage;
-
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-	const session = await unstable_getServerSession(req, res, authOptions);
-
-	if (!session?.user) {
-		return {
-			redirect: {
-				destination: '/sign-in',
-				permanent: true,
-			},
-			props: {},
-		};
-	}
-
-	return {
-		props: {
-			session,
-		},
-	};
-};
