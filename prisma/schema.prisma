@@ -64,7 +64,7 @@ model VerificationToken {
 }
 
 model Record {
-    id         String   @id @default(cuid())
+    id         String        @id @default(cuid())
     name       String
     address    String
     telephone  String
@@ -72,6 +72,7 @@ model Record {
     status     MaritalStatus @default(single)
     complaint  String
     birthday   DateTime
+    entries    Entry[]
 }
 
 enum MaritalStatus {
@@ -80,4 +81,15 @@ enum MaritalStatus {
     divorced
     separated
     widowed
+}
+
+model Entry {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    date        DateTime
+    description String
+    amount      Decimal
+    recordId    String?
+    Record      Record?  @relation(fields: [recordId], references: [id])
 }
