@@ -21,11 +21,13 @@ import { AppProps } from './_app';
 const NoResultsFound = () => {
 	return (
 		<div className='flex h-full flex-col items-center justify-center gap-4'>
-			<Image src='/assets/empty.svg' width={384} height={384} alt='empty record' />
-			<span className='-mt-14 flex flex-col items-center'>
-				<h1 className='text-xl text-slate-700'>No records found</h1>
-				<p className='text-slate-500'>Please try adjusting the search</p>
-			</span>
+			<div className='bg-white rounded shadow-md p-8'>
+				<Image src='/assets/empty.svg' width={384} height={384} alt='empty record' />
+				<span className='-mt-14 flex flex-col items-center'>
+					<h1 className='text-xl text-slate-700'>No records found</h1>
+					<p className='text-slate-500'>Please try adjusting the search</p>
+				</span>
+			</div>
 		</div>
 	);
 };
