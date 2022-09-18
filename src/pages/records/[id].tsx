@@ -13,13 +13,14 @@ import RecordForm from '../../features/record/RecordForm';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
+import { AppProps } from '../_app';
 
 const getAge = (dateOfBirth: Date) => {
 	const date = dayjs(dateOfBirth);
 	return dayjs().diff(date, 'year');
 };
 
-const RecordPage: NextPage = () => {
+const RecordPage: NextPage<AppProps> = () => {
 	const router = useRouter();
 	const modals = useModals();
 	const id = router.query.id as string;
@@ -122,8 +123,8 @@ const RecordPage: NextPage = () => {
 									</div>
 								</ScrollArea>
 							</div>
-							<div className='flex-[2] bg-slate-200 rounded-r p-4'>
-								<div className='flex justify-end'>
+							<div className='flex-[2] bg-slate-50 rounded-r p-4'>
+								<div className='flex justify-end items-center'>
 									<Button leftIcon={<PlusIcon />}>Add Transaction</Button>
 								</div>
 							</div>

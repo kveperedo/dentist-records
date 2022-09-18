@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, PlusIcon, ArrowUpIcon, HamburgerMenuIcon, ExitIcon } from '@radix-ui/react-icons';
+import { MagnifyingGlassIcon, PlusIcon, ArrowUpIcon, HamburgerMenuIcon } from '@radix-ui/react-icons';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import { useEffect, useState } from 'react';
 import TextInput from '../components/TextInput';
 import { useModals } from '@mantine/modals';
-import { Avatar, Drawer, Pagination, ScrollArea } from '@mantine/core';
+import { Pagination, ScrollArea } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import Image from 'next/image';
 import { join } from 'tailwind-merge';
@@ -14,8 +14,9 @@ import LoadingOverlay from '../components/LoadingOverlay';
 import RecordForm from '../features/record/RecordForm';
 import { showNotification } from '../utils/mantine';
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { AppProps } from './_app';
 
 const NoResultsFound = () => {
 	return (
@@ -31,16 +32,15 @@ const NoResultsFound = () => {
 
 const SEARCH_INPUT_DEBOUNCE_TIME = 250;
 
-const HomePage: NextPage = () => {
+const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 	const modals = useModals();
 	const utils = trpc.useContext();
-	const { data: session, status } = useSession();
+	const { status } = useSession();
 	const router = useRouter();
 	const [pageNumber, setPageNumber] = useState(1);
 	const [pageCount, setPageCount] = useState(0);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isSortedAsc, setIsSortedAsc] = useState(true);
-	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const [isFirstInitialLoading, setIsFirstInitialLoading] = useState(true);
 	const [debouncedSearchTerm] = useDebouncedValue(searchTerm, SEARCH_INPUT_DEBOUNCE_TIME);
 	const { data, isLoading: isGetRecordsLoading } = trpc.useQuery(
@@ -167,7 +167,7 @@ const HomePage: NextPage = () => {
 				<div className='min-h-screen bg-slate-100'>
 					<main className='container m-auto flex h-screen flex-1 flex-col p-8'>
 						<div className='mb-8 flex items-center gap-4'>
-							<Button variant='secondary' className='px-[7px]' onClick={() => setIsDrawerOpen(true)}>
+							<Button variant='secondary' className='px-[7px]' onClick={openDrawer}>
 								<HamburgerMenuIcon className='h-5 w-5' />
 							</Button>
 
@@ -285,36 +285,6 @@ const HomePage: NextPage = () => {
 					</main>
 				</div>
 			)}
-
-			<Drawer
-				title='Dental Record'
-				classNames={{
-					header: join(`items-center`),
-					title: join(`text-xl font-medium text-slate-800`),
-					drawer: join(`p-8 rounded-r flex flex-col`),
-					closeButton: join(`[&>svg]:w-5 [&>svg]:h-5 text-slate-600`),
-				}}
-				opened={isDrawerOpen}
-				onClose={() => setIsDrawerOpen(false)}
-			>
-				<div className='flex flex-1 flex-col items-center'>
-					<div className='flex flex-col gap-4 mt-auto w-full'>
-						<div className='flex gap-4 items-center justify-center'>
-							<Avatar src={session?.user?.image} radius='xl' />
-							<p className='text-slate-500'>{session?.user?.name}</p>
-						</div>
-						<Button
-							onClick={() => signOut({ redirect: true })}
-							variant='secondary'
-							className='w-full justify-center'
-							classNames={{ inner: join(`gap-4`) }}
-							leftIcon={<ExitIcon className='h-5 w-5' />}
-						>
-							Logout
-						</Button>
-					</div>
-				</div>
-			</Drawer>
 		</>
 	);
 };

@@ -9,8 +9,22 @@ import { MantineProvider } from '@mantine/core';
 import { emotionCache } from '../styles/emotion-cache';
 import { ModalsProvider } from '@mantine/modals';
 import { NotificationsProvider } from '@mantine/notifications';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import MainDrawer from '../features/shared/MainDrawer';
+
+export interface AppProps {
+	openDrawer: () => void;
+}
 
 const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => {
+	const router = useRouter();
+	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+
+	useEffect(() => {
+		setIsDrawerOpen(false);
+	}, [router.asPath]);
+
 	return (
 		<SessionProvider session={session}>
 			<MantineProvider
@@ -45,7 +59,8 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 							centered: true,
 						}}
 					>
-						<Component {...pageProps} />
+						<Component {...pageProps} openDrawer={() => setIsDrawerOpen(true)} />
+						<MainDrawer onClose={() => setIsDrawerOpen(false)} isDrawerOpen={isDrawerOpen} />
 					</ModalsProvider>
 				</NotificationsProvider>
 			</MantineProvider>
