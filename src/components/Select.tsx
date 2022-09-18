@@ -28,7 +28,10 @@ const Select = React.forwardRef<HTMLInputElement, SelectProps>(({ leftIcon, righ
 					classNames?.input
 				),
 				icon: twMerge(`absolute right-0 top-0 h-full w-10`, classNames?.icon),
-				rightSection: twMerge(`absolute right-0 top-0 z-0 h-full w-10`, classNames?.rightSection),
+				rightSection: twMerge(
+					`absolute right-0 top-0 z-0 h-full w-10 pointer-events-none`,
+					classNames?.rightSection
+				),
 				itemsWrapper: twMerge(`p-2`, classNames?.itemsWrapper),
 				item: twMerge(
 					`
