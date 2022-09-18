@@ -78,7 +78,7 @@ model Record {
     status     MaritalStatus @default(single)
     complaint  String
     birthday   DateTime
-    entries    Entry[]
+    entries    TreatmentEntry[]
 }
 
 enum MaritalStatus {
@@ -89,13 +89,14 @@ enum MaritalStatus {
     widowed
 }
 
-model Entry {
-    id          String   @id @default(cuid())
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    date        DateTime
-    description String
-    amount      Decimal
-    recordId    String?
-    Record      Record?  @relation(fields: [recordId], references: [id])
+model TreatmentEntry {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    date      DateTime
+    tooth     String
+    service   String
+    fees      Decimal
+    recordId  String?
+    Record    Record?  @relation(fields: [recordId], references: [id])
 }
