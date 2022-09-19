@@ -8,7 +8,6 @@ import TextInput from '../components/TextInput';
 import { useModals } from '@mantine/modals';
 import { Pagination, ScrollArea } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import Image from 'next/image';
 import { join } from 'tailwind-merge';
 import LoadingOverlay from '../components/LoadingOverlay';
 import RecordForm from '../features/record/RecordForm';
@@ -17,18 +16,72 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { AppProps } from './_app';
+import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../components/Table';
+import EmptyOverlay from '../components/EmptyOverlay';
 
 const NoResultsFound = () => {
 	return (
 		<div className='flex h-full flex-col items-center justify-center gap-4'>
-			<div className='bg-white rounded shadow-md p-8'>
-				<Image src='/assets/empty.svg' width={384} height={384} alt='empty record' />
-				<span className='-mt-14 flex flex-col items-center'>
-					<h1 className='text-xl text-slate-700'>No records found</h1>
-					<p className='text-slate-500'>Please try adjusting the search</p>
-				</span>
-			</div>
+			<EmptyOverlay
+				classes={{ container: join('bg-white rouneded shadow-md') }}
+				imageSrc='/assets/empty.svg'
+				imageAlt='empty record'
+				title='No records found'
+				description='Please try adjusting the search!'
+			/>
 		</div>
+	);
+};
+
+interface RecordTableProps {
+	records: { id: string; name: string }[];
+	isSortedAsc: boolean;
+	onSortClick: () => void;
+	onRecordDelete: (id: string) => void;
+}
+
+const RecordTable = ({ records, isSortedAsc, onSortClick, onRecordDelete }: RecordTableProps) => {
+	return (
+		<TableContainer>
+			<TableHeader>
+				<tr>
+					<TableHeaderCell
+						onClick={onSortClick}
+						className={join(`cursor-pointer transition-colors hover:bg-slate-300`)}
+					>
+						<div className='flex items-center gap-2'>
+							<p>Name</p>
+							{
+								<ArrowUpIcon
+									className={join('h-5 w-5 transition-transform', !isSortedAsc && 'rotate-180')}
+								/>
+							}
+						</div>
+					</TableHeaderCell>
+					<TableHeaderCell className='text-right'>Actions</TableHeaderCell>
+				</tr>
+			</TableHeader>
+			<tbody>
+				{records.map((record) => (
+					<TableRow key={record.id}>
+						<TableCell>{record.name}</TableCell>
+						<TableCell>
+							<div className='flex justify-end gap-4'>
+								<Link href={`/records/${record.id}`}>
+									<Button variant='secondary' size='sm'>
+										View
+									</Button>
+								</Link>
+
+								<Button variant='outlined' onClick={() => onRecordDelete(record.id)} size='sm'>
+									Delete
+								</Button>
+							</div>
+						</TableCell>
+					</TableRow>
+				))}
+			</tbody>
+		</TableContainer>
 	);
 };
 
@@ -202,67 +255,12 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 									classNames={{ viewport: 'h-full' }}
 								>
 									<LoadingOverlay visible={isTableLoading && status === 'authenticated'} />
-									<table className='h-full w-full table-auto border-collapse bg-white shadow-sm'>
-										<thead
-											className={`
-										sticky top-0 z-10 table-header-group 
-										border-separate border-b-2 border-slate-500 text-slate-700`}
-										>
-											<tr>
-												<th
-													onClick={() => setIsSortedAsc((prev) => !prev)}
-													className={join(
-														`cursor-pointer rounded-tl-md bg-slate-200 p-4 py-6 
-														text-left font-semibold transition-colors 
-														hover:bg-slate-300
-														`
-													)}
-												>
-													<div className='flex items-center gap-2'>
-														<p>Name</p>
-														{
-															<ArrowUpIcon
-																className={join(
-																	'h-5 w-5 transition-transform',
-																	!isSortedAsc && 'rotate-180'
-																)}
-															/>
-														}
-													</div>
-												</th>
-												<th className='rounded-tr-md bg-slate-200 p-4 py-6 text-right font-semibold'>
-													Actions
-												</th>
-											</tr>
-										</thead>
-										<tbody>
-											{data?.records?.map((record) => (
-												<tr
-													className='border-collapse text-slate-600 transition-colors hover:bg-slate-50'
-													key={record.id}
-												>
-													<td className='rounded-bl-md px-4 py-3'>{record.name}</td>
-													<td className='rounded-br-md px-4 py-3'>
-														<div className='flex justify-end gap-4'>
-															<Link href={`/records/${record.id}`}>
-																<Button variant='secondary' size='sm'>
-																	View
-																</Button>
-															</Link>
-
-															<Button
-																variant='outlined'
-																onClick={() => handleDeleteRecord(record.id)}
-																size='sm'
-															>
-																Delete
-															</Button>
-														</div>
-													</td>
-												</tr>
-											))}
-										</tbody>
-									</table>
+									<RecordTable
+										records={data?.records ?? []}
+										isSortedAsc={isSortedAsc}
+										onRecordDelete={handleDeleteRecord}
+										onSortClick={() => setIsSortedAsc((prev) => !prev)}
+									/>
 								</ScrollArea>
 							</div>
 						)}

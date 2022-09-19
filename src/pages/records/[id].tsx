@@ -1,5 +1,6 @@
 import { ScrollArea } from '@mantine/core';
 import { useModals } from '@mantine/modals';
+import { TreatmentEntry } from '@prisma/client';
 import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
 import dayjs from 'dayjs';
 import { NextPage } from 'next';
@@ -7,13 +8,73 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Button from '../../components/Button';
+import EmptyOverlay from '../../components/EmptyOverlay';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../../components/Table';
 import TextInput from '../../components/TextInput';
 import RecordForm from '../../features/record/RecordForm';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
 import { AppProps } from '../_app';
+
+const numberFormatter = new Intl.NumberFormat('en-US', {
+	style: 'currency',
+	currency: 'PHP',
+	maximumSignificantDigits: 2,
+});
+
+interface EntryTableProps {
+	entries: TreatmentEntry[];
+}
+
+const EntryTable = ({ entries }: EntryTableProps) => {
+	if (entries.length === 0) {
+		return (
+			<div className='flex h-full flex-col items-center justify-center gap-4'>
+				<EmptyOverlay
+					imageAlt='empty transactions'
+					imageSrc='/assets/empty.svg'
+					title='No transactions yet'
+					description='Add a transaction by clicking the button in the upper right corner!'
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<ScrollArea className='clip-rounded relative flex flex-1' classNames={{ viewport: 'h-full' }}>
+			<TableContainer>
+				<TableHeader>
+					<tr>
+						<TableHeaderCell className='w-2/12 break-words'>Date</TableHeaderCell>
+						<TableHeaderCell className='w-4/12 break-words'>Tooth</TableHeaderCell>
+						<TableHeaderCell className='w-4/12 break-words'>Service</TableHeaderCell>
+						<TableHeaderCell className='w-2/12 break-words text-right'>Fees</TableHeaderCell>
+					</tr>
+				</TableHeader>
+				<tbody>
+					{entries.map((entry) => (
+						<TableRow key={entry.id}>
+							<TableCell>
+								<p>{dayjs(entry.date).format('MMMM DD, YYYY')}</p>
+							</TableCell>
+							<TableCell>
+								<p>{entry.tooth}</p>
+							</TableCell>
+							<TableCell>
+								<p>{entry.service}</p>
+							</TableCell>
+							<TableCell className='text-right'>
+								<p>{numberFormatter.format(entry.fees)}</p>
+							</TableCell>
+						</TableRow>
+					))}
+				</tbody>
+			</TableContainer>
+		</ScrollArea>
+	);
+};
 
 const getAge = (dateOfBirth: Date) => {
 	const date = dayjs(dateOfBirth);
@@ -123,10 +184,12 @@ const RecordPage: NextPage<AppProps> = () => {
 									</div>
 								</ScrollArea>
 							</div>
-							<div className='flex-[2] bg-slate-50 rounded-r p-4'>
-								<div className='flex justify-end items-center'>
+							<div className='flex-[2] bg-slate-50 rounded-r p-4 flex flex-col gap-4'>
+								<div className='flex justify-between items-center'>
+									<p className='text-xl text-slate-700'>Transactions</p>
 									<Button leftIcon={<PlusIcon />}>Add Transaction</Button>
 								</div>
+								<EntryTable entries={data?.entries ?? []} />
 							</div>
 						</div>
 					)}
