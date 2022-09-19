@@ -96,7 +96,7 @@ model TreatmentEntry {
     date      DateTime
     tooth     String
     service   String
-    fees      Decimal
+    fees      Float
     recordId  String?
     Record    Record?  @relation(fields: [recordId], references: [id])
 }
