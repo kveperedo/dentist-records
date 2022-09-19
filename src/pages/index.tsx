@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 import { AppProps } from './_app';
 import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../components/Table';
 import EmptyOverlay from '../components/EmptyOverlay';
+import { atom, useAtom } from 'jotai';
 
 const NoResultsFound = () => {
 	return (
@@ -87,15 +88,18 @@ const RecordTable = ({ records, isSortedAsc, onSortClick, onRecordDelete }: Reco
 
 const SEARCH_INPUT_DEBOUNCE_TIME = 250;
 
+const pageNumberAtom = atom(1);
+const isSortedAscAtom = atom(true);
+
 const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 	const modals = useModals();
 	const utils = trpc.useContext();
 	const { status } = useSession();
 	const router = useRouter();
-	const [pageNumber, setPageNumber] = useState(1);
+	const [pageNumber, setPageNumber] = useAtom(pageNumberAtom);
+	const [isSortedAsc, setIsSortedAsc] = useAtom(isSortedAscAtom);
 	const [pageCount, setPageCount] = useState(0);
 	const [searchTerm, setSearchTerm] = useState('');
-	const [isSortedAsc, setIsSortedAsc] = useState(true);
 	const [isFirstInitialLoading, setIsFirstInitialLoading] = useState(true);
 	const [debouncedSearchTerm] = useDebouncedValue(searchTerm, SEARCH_INPUT_DEBOUNCE_TIME);
 	const { data, isLoading: isGetRecordsLoading } = trpc.useQuery(
