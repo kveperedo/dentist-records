@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { Record } from '../../types/schema';
-import { createRouter } from './context';
+import { createProtectedRouter } from './protected-router';
 
 const MAX_NUMBER_OF_RECORDS_PER_QUERY = 20;
 
-export const recordRouter = createRouter()
+export const recordRouter = createProtectedRouter()
 	.query('all', {
 		input: z.object({
 			pageNumber: z.number().min(1),
@@ -42,6 +42,9 @@ export const recordRouter = createRouter()
 			const record = await ctx.prisma.record.findFirst({
 				where: {
 					id: input,
+				},
+				include: {
+					entries: true,
 				},
 			});
 

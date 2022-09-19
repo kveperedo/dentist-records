@@ -83,10 +83,7 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 			</div>
 
 			<div className='mt-4 flex justify-end gap-4'>
-				<Button
-					onClick={onClose}
-					className='bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200'
-				>
+				<Button variant='outlined' onClick={onClose}>
 					Cancel
 				</Button>
 				<Button type='submit'>Submit</Button>

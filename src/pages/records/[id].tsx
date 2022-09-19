@@ -1,28 +1,92 @@
 import { ScrollArea } from '@mantine/core';
 import { useModals } from '@mantine/modals';
-import { ArrowLeftIcon, Pencil1Icon } from '@radix-ui/react-icons';
+import { TreatmentEntry } from '@prisma/client';
+import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
 import dayjs from 'dayjs';
 import { NextPage } from 'next';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { join } from 'tailwind-merge';
 import Button from '../../components/Button';
+import EmptyOverlay from '../../components/EmptyOverlay';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../../components/Table';
 import TextInput from '../../components/TextInput';
 import RecordForm from '../../features/record/RecordForm';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
+import { AppProps } from '../_app';
+
+const numberFormatter = new Intl.NumberFormat('en-US', {
+	style: 'currency',
+	currency: 'PHP',
+	maximumSignificantDigits: 2,
+});
+
+interface EntryTableProps {
+	entries: TreatmentEntry[];
+}
+
+const EntryTable = ({ entries }: EntryTableProps) => {
+	if (entries.length === 0) {
+		return (
+			<div className='flex h-full flex-col items-center justify-center gap-4'>
+				<EmptyOverlay
+					imageAlt='empty transactions'
+					imageSrc='/assets/empty.svg'
+					title='No transactions yet'
+					description='Add a transaction by clicking the button in the upper right corner!'
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<ScrollArea className='clip-rounded relative flex flex-1' classNames={{ viewport: 'h-full' }}>
+			<TableContainer>
+				<TableHeader>
+					<tr>
+						<TableHeaderCell className='w-2/12 break-words'>Date</TableHeaderCell>
+						<TableHeaderCell className='w-4/12 break-words'>Tooth</TableHeaderCell>
+						<TableHeaderCell className='w-4/12 break-words'>Service</TableHeaderCell>
+						<TableHeaderCell className='w-2/12 break-words text-right'>Fees</TableHeaderCell>
+					</tr>
+				</TableHeader>
+				<tbody>
+					{entries.map((entry) => (
+						<TableRow key={entry.id}>
+							<TableCell>
+								<p>{dayjs(entry.date).format('MMMM DD, YYYY')}</p>
+							</TableCell>
+							<TableCell>
+								<p>{entry.tooth}</p>
+							</TableCell>
+							<TableCell>
+								<p>{entry.service}</p>
+							</TableCell>
+							<TableCell className='text-right'>
+								<p>{numberFormatter.format(entry.fees)}</p>
+							</TableCell>
+						</TableRow>
+					))}
+				</tbody>
+			</TableContainer>
+		</ScrollArea>
+	);
+};
 
 const getAge = (dateOfBirth: Date) => {
 	const date = dayjs(dateOfBirth);
 	return dayjs().diff(date, 'year');
 };
 
-const RecordPage: NextPage = () => {
+const RecordPage: NextPage<AppProps> = () => {
 	const router = useRouter();
 	const modals = useModals();
 	const id = router.query.id as string;
 	const utils = trpc.useContext();
+	const { status } = useSession();
 	const { data, isLoading: isGetRecordLoading } = trpc.useQuery(['record.specific', id], { enabled: !!id });
 	const { mutate: editRecord, isLoading: isEditRecordLoading } = trpc.useMutation(['record.edit'], {
 		onSuccess: () => {
@@ -65,31 +129,31 @@ const RecordPage: NextPage = () => {
 		});
 	};
 
+	if (status === 'unauthenticated') {
+		router.replace('/sign-in');
+	}
+
 	return (
 		<div className='min-h-screen bg-slate-100'>
 			<main className='container m-auto flex h-screen p-8'>
 				<div className='relative flex w-full flex-1 flex-col gap-8'>
 					<LoadingOverlay visible={isLoading} />
 					{data && (
-						<div className='flex h-full divide-x-2 divide-slate-200 rounded bg-white shadow'>
+						<div className='flex h-full divide-x-2 divide-slate-200 rounded bg-white shadow-md'>
 							<div className='flex flex-1 flex-col'>
 								<div className='m-4 flex justify-between'>
+									<Link href='/'>
+										<Button
+											variant='ghost'
+											leftIcon={<ArrowLeftIcon className='h-5 w-5 text-slate-600' />}
+										>
+											Go back
+										</Button>
+									</Link>
+
 									<Button
-										onClick={() => router.back()}
-										className={join(`
-									border-transparent bg-transparent text-slate-600
-									hover:border-slate-600 hover:bg-slate-100 active:bg-slate-200
-									`)}
-										leftIcon={<ArrowLeftIcon className='h-5 w-5 text-slate-600' />}
-									>
-										Go back
-									</Button>
-									<Button
+										variant='secondary'
 										onClick={handleEditRecord}
-										className={join(`
-										border-transparent bg-slate-200 text-slate-700 transition-colors 
-										hover:bg-slate-300 active:bg-slate-400
-									`)}
 										leftIcon={<Pencil1Icon className='h-5 w-5' />}
 									>
 										Edit Record
@@ -120,7 +184,13 @@ const RecordPage: NextPage = () => {
 									</div>
 								</ScrollArea>
 							</div>
-							<div className='flex-[2]'></div>
+							<div className='flex-[2] bg-slate-50 rounded-r p-4 flex flex-col gap-4'>
+								<div className='flex justify-between items-center'>
+									<p className='text-xl text-slate-700'>Transactions</p>
+									<Button leftIcon={<PlusIcon />}>Add Transaction</Button>
+								</div>
+								<EntryTable entries={data?.entries ?? []} />
+							</div>
 						</div>
 					)}
 				</div>

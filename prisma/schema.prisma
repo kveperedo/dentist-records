@@ -51,8 +51,14 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
+    role          Role      @default(user)
     accounts      Account[]
     sessions      Session[]
+}
+
+enum Role {
+    user
+    admin
 }
 
 model VerificationToken {
@@ -64,7 +70,7 @@ model VerificationToken {
 }
 
 model Record {
-    id         String   @id @default(cuid())
+    id         String        @id @default(cuid())
     name       String
     address    String
     telephone  String
@@ -72,6 +78,7 @@ model Record {
     status     MaritalStatus @default(single)
     complaint  String
     birthday   DateTime
+    entries    TreatmentEntry[]
 }
 
 enum MaritalStatus {
@@ -80,4 +87,16 @@ enum MaritalStatus {
     divorced
     separated
     widowed
+}
+
+model TreatmentEntry {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    date      DateTime
+    tooth     String
+    service   String
+    fees      Float
+    recordId  String?
+    Record    Record?  @relation(fields: [recordId], references: [id])
 }
