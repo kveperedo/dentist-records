@@ -13,6 +13,7 @@ import LoadingOverlay from '../../components/LoadingOverlay';
 import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../../components/Table';
 import TextInput from '../../components/TextInput';
 import RecordForm from '../../features/record/RecordForm';
+import TransactionForm from '../../features/record/TransactionForm';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
@@ -63,7 +64,7 @@ const EntryTable = ({ entries }: EntryTableProps) => {
 								<p>{entry.tooth}</p>
 							</TableCell>
 							<TableCell>
-								<p>{entry.service}</p>
+								<p className='whitespace-pre'>{entry.service}</p>
 							</TableCell>
 							<TableCell className='text-right'>
 								<p>{numberFormatter.format(entry.fees)}</p>
@@ -106,7 +107,41 @@ const RecordPage: NextPage<AppProps> = () => {
 			});
 		},
 	});
-	const isLoading = isGetRecordLoading || isEditRecordLoading;
+	const { mutate: addTransaction, isLoading: isAddTransactionLoading } = trpc.useMutation(['transaction.add'], {
+		onSuccess: () => {
+			utils.invalidateQueries(['record.specific', id]);
+			showNotification({
+				status: 'success',
+				title: 'Add Transaction',
+				message: "Successfully added transaction to patient's records.",
+			});
+		},
+		onError: (error) => {
+			console.log(error);
+			showNotification({
+				status: 'error',
+				title: 'Error',
+				message: "An error occurred while adding transaction to patient's records.",
+			});
+		},
+	});
+	const isLoading = isGetRecordLoading || isEditRecordLoading || isAddTransactionLoading;
+
+	const handleAddTransaction = () => {
+		const modalId = modals.openModal({
+			title: 'Add Transaction',
+			children: (
+				<TransactionForm
+					onSubmit={(values) => {
+						modals.closeModal(modalId);
+						addTransaction({ ...values, recordId: id });
+					}}
+					onClose={() => modals.closeModal(modalId)}
+				/>
+			),
+			className: '[&_.mantine-Modal-modal]:w-[768px]',
+		});
+	};
 
 	const handleEditRecord = () => {
 		if (!data) {
@@ -187,7 +222,9 @@ const RecordPage: NextPage<AppProps> = () => {
 							<div className='flex-[2] bg-slate-50 rounded-r p-4 flex flex-col gap-4'>
 								<div className='flex justify-between items-center'>
 									<p className='text-xl text-slate-700'>Transactions</p>
-									<Button leftIcon={<PlusIcon />}>Add Transaction</Button>
+									<Button onClick={handleAddTransaction} leftIcon={<PlusIcon />}>
+										Add Transaction
+									</Button>
 								</div>
 								<EntryTable entries={data?.entries ?? []} />
 							</div>
