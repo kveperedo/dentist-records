@@ -18,9 +18,9 @@ const MainDrawer = ({ isDrawerOpen, onClose }: MainDrawerProps) => {
 			title='Dental Record'
 			classNames={{
 				header: join(`items-center`),
-				title: join(`text-xl font-medium text-slate-800`),
+				title: join(`text-xl font-medium text-primary-800`),
 				drawer: join(`p-8 rounded-r flex flex-col`),
-				closeButton: join(`[&>svg]:w-5 [&>svg]:h-5 text-slate-600`),
+				closeButton: join(`[&>svg]:w-5 [&>svg]:h-5 text-primary-600`),
 			}}
 			opened={isDrawerOpen}
 			onClose={onClose}
@@ -41,7 +41,7 @@ const MainDrawer = ({ isDrawerOpen, onClose }: MainDrawerProps) => {
 				<div className='flex flex-col gap-4 mt-auto w-full'>
 					<div className='flex gap-4 items-center justify-center'>
 						<Avatar src={session?.user?.image} radius='xl' />
-						<p className='text-slate-500'>{session?.user?.name}</p>
+						<p className='text-primary-500'>{session?.user?.name}</p>
 					</div>
 					<Button
 						onClick={() => signOut({ redirect: true })}

@@ -14,8 +14,8 @@ const EmptyOverlay = ({ imageSrc, imageAlt, description, title, classes }: Empty
 		<div className={twMerge('flex flex-col p-8', classes?.container)}>
 			<Image src={imageSrc} width={384} height={384} alt={imageAlt} />
 			<span className={twMerge('-mt-10 flex flex-col items-center gap-1', classes?.label)}>
-				<h1 className='text-xl text-slate-700'>{title}</h1>
-				<p className='text-slate-500'>{description}</p>
+				<h1 className='text-xl text-primary-700'>{title}</h1>
+				<p className='text-primary-500'>{description}</p>
 			</span>
 		</div>
 	);

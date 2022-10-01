@@ -7,19 +7,19 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, MantineTextareaProps>(({ 
 		<MantineTextarea
 			classNames={{
 				root: twMerge(`flex flex-col gap-1`, classNames?.root),
-				label: twMerge(`text-sm text-slate-700`, classNames?.label),
-				required: twMerge(`text-slate-900`, classNames?.required),
+				label: twMerge(`text-sm text-primary-700`, classNames?.label),
+				required: twMerge(`text-primary-900`, classNames?.required),
 				wrapper: twMerge(`relative`, classNames?.wrapper),
 				input: twMerge(
 					`
-            w-full rounded border-2 border-slate-200 bg-white py-[6px] px-4
-            font-poppins text-base text-slate-500 transition-colors 
-            hover:border-slate-400 focus:border-slate-600 focus-visible:outline-none
+            w-full rounded border-2 border-primary-100 bg-white py-[6px] px-4
+            font-poppins text-base text-primary-500 transition-colors 
+            hover:border-primary-400 focus:border-primary-600 focus-visible:outline-none
             `,
 					props.readOnly &&
 						`
-            border-transparent border-b-slate-200 px-0 hover:border-transparent
-            hover:border-b-slate-400 focus:border-transparent focus:border-b-slate-600
+            border-transparent border-b-primary-200 px-0 hover:border-transparent
+            hover:border-b-primary-400 focus:border-transparent focus:border-b-primary-600
             `,
 					classNames?.input
 				),

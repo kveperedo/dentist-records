@@ -48,7 +48,7 @@ const RecordTable = ({ records, isSortedAsc, onSortClick, onRecordDelete }: Reco
 				<tr>
 					<TableHeaderCell
 						onClick={onSortClick}
-						className={join(`cursor-pointer transition-colors hover:bg-slate-300`)}
+						className={join(`cursor-pointer transition-colors hover:bg-primary-300`)}
 					>
 						<div className='flex items-center gap-2'>
 							<p>Name</p>
@@ -64,7 +64,7 @@ const RecordTable = ({ records, isSortedAsc, onSortClick, onRecordDelete }: Reco
 			</TableHeader>
 			<tbody>
 				{records.map((record) => (
-					<TableRow key={record.id}>
+					<TableRow className='odd:bg-zinc-50' key={record.id}>
 						<TableCell>{record.name}</TableCell>
 						<TableCell>
 							<div className='flex justify-end gap-4'>
@@ -187,7 +187,7 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 			title: 'Delete record',
 			children: (
 				<>
-					<p className='text-slate-600'>Are you sure you want to delete this record?</p>
+					<p className='text-primary-600'>Are you sure you want to delete this record?</p>
 					<div className='mt-4 flex justify-end gap-4'>
 						<Button variant='outlined' onClick={() => modals.closeModal(modalId)}>
 							Cancel
@@ -223,7 +223,7 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 			{status === 'loading' || isFirstInitialLoading ? (
 				<LoadingOverlay visible />
 			) : (
-				<div className='min-h-screen bg-slate-100'>
+				<div className='min-h-screen bg-primary-50'>
 					<main className='container m-auto flex h-screen flex-1 flex-col p-8'>
 						<div className='mb-8 flex items-center gap-4'>
 							<Button variant='secondary' className='px-[7px]' onClick={openDrawer}>
@@ -235,7 +235,7 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 								onChange={(e) => setSearchTerm(e.target.value)}
 								rightIcon={
 									<span className='flex h-full w-10 shrink-0 cursor-pointer items-center justify-center'>
-										<MagnifyingGlassIcon className='h-5 w-5 text-slate-500' />
+										<MagnifyingGlassIcon className='h-5 w-5 text-primary-500' />
 									</span>
 								}
 								placeholder='Search users'
@@ -273,10 +273,10 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 							className='mt-auto'
 							classNames={{
 								item: `
-									text-slate-800 [&[data-active]]:bg-slate-600 
-									[&[data-active]]:text-slate-50 text-base font-poppins
-									border-slate-200 enabled:hover:border-slate-300 bg-white
-									font-normal transition-colors disabled:bg-slate-300
+									text-primary-800 [&[data-active]]:bg-primary-600 
+									[&[data-active]]:text-primary-50 text-base font-poppins
+									border-primary-100 enabled:hover:border-primary-300 bg-white
+									font-normal transition-colors disabled:bg-primary-300
 									`,
 							}}
 							page={pageNumber}

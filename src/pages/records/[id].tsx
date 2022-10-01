@@ -56,7 +56,7 @@ const EntryTable = ({ entries }: EntryTableProps) => {
 				</TableHeader>
 				<tbody>
 					{entries.map((entry) => (
-						<TableRow key={entry.id}>
+						<TableRow className='odd:bg-zinc-50' key={entry.id}>
 							<TableCell>
 								<p>{dayjs(entry.date).format('MMMM DD, YYYY')}</p>
 							</TableCell>
@@ -169,18 +169,18 @@ const RecordPage: NextPage<AppProps> = () => {
 	}
 
 	return (
-		<div className='min-h-screen bg-slate-100'>
+		<div className='min-h-screen bg-primary-100'>
 			<main className='container m-auto flex h-screen p-8'>
 				<div className='relative flex w-full flex-1 flex-col gap-8'>
 					<LoadingOverlay visible={isLoading} />
 					{data && (
-						<div className='flex h-full divide-x-2 divide-slate-200 rounded bg-white shadow-md'>
+						<div className='flex h-full divide-x-2 divide-primary-200 rounded bg-white shadow-md'>
 							<div className='flex flex-1 flex-col'>
 								<div className='m-4 flex justify-between'>
 									<Link href='/'>
 										<Button
 											variant='ghost'
-											leftIcon={<ArrowLeftIcon className='h-5 w-5 text-slate-600' />}
+											leftIcon={<ArrowLeftIcon className='h-5 w-5 text-primary-600' />}
 										>
 											Go back
 										</Button>
@@ -219,9 +219,9 @@ const RecordPage: NextPage<AppProps> = () => {
 									</div>
 								</ScrollArea>
 							</div>
-							<div className='flex-[2] bg-slate-50 rounded-r p-4 flex flex-col gap-4'>
+							<div className='flex-[2] bg-primary-50 rounded-r p-4 flex flex-col gap-4'>
 								<div className='flex justify-between items-center'>
-									<p className='text-xl text-slate-700'>Transactions</p>
+									<p className='text-xl text-primary-700'>Transactions</p>
 									<Button onClick={handleAddTransaction} leftIcon={<PlusIcon />}>
 										Add Transaction
 									</Button>

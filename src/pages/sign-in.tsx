@@ -35,12 +35,12 @@ const SignInPage: NextPage = () => {
 				<link rel='icon' href='/favicon.ico' />
 			</Head>
 
-			<div className='min-h-screen bg-slate-100'>
+			<div className='min-h-screen bg-primary-100'>
 				<main className='container m-auto flex h-screen items-center justify-center p-8'>
 					<div className={join(`flex flex-col items-center bg-white rounded shadow-md p-8 gap-4`)}>
-						<h1 className='text-2xl text-slate-700 text-center'>Log In</h1>
+						<h1 className='text-2xl text-primary-700 text-center'>Log In</h1>
 						<Image src='/assets/sign-in.svg' alt='sign-in' width={192} height={192} />
-						<p className='text-base text-slate-500 text-center'>
+						<p className='text-base text-primary-500 text-center'>
 							Enter your credentials to access your records
 						</p>
 						<Button variant='primary' leftIcon={<GoogleIcon />} onClick={handleSignIn}>

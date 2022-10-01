@@ -38,10 +38,10 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 						Notification: {
 							classNames: {
 								root: 'shadow-sm p-3 before:hidden',
-								title: 'text-base text-slate-700',
-								description: 'text-sm text-slate-500',
+								title: 'text-base text-primary-700',
+								description: 'text-sm text-primary-500',
 								icon: 'bg-transparent mr-2',
-								closeButton: '[&>svg]:w-5 [&>svg]:h-5 text-slate-600',
+								closeButton: '[&>svg]:w-5 [&>svg]:h-5 text-primary-600',
 							},
 						},
 					},
@@ -52,8 +52,8 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 					<ModalsProvider
 						modalProps={{
 							classNames: {
-								title: `text-xl font-medium text-slate-800`,
-								close: `[&>svg]:w-5 [&>svg]:h-5 text-slate-600 focus-visible:outline-slate-700`,
+								title: `text-xl font-medium text-primary-800`,
+								close: `[&>svg]:w-5 [&>svg]:h-5 text-primary-600 focus-visible:outline-primary-700`,
 								modal: `p-8`,
 							},
 							centered: true,
