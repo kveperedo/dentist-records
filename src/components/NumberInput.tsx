@@ -12,10 +12,10 @@ const NumberInput = React.forwardRef<HTMLInputElement, MantineNumberInputProps>(
 				wrapper: twMerge(`relative`, classNames?.wrapper),
 				input: twMerge(
 					`
-            w-full rounded border-2 border-primary-100 bg-white py-[6px] px-4
-            font-poppins text-base text-primary-500 transition-colors 
-            hover:border-primary-400 focus:border-primary-600 focus-visible:outline-none
-            h-10
+            h-10 w-full rounded border-2 border-primary-100 bg-white py-[6px]
+            px-4 font-poppins text-base text-primary-500 
+            transition-colors hover:border-primary-400 focus:border-primary-600
+            focus-visible:outline-none
             `,
 					props.readOnly &&
 						`
@@ -25,7 +25,8 @@ const NumberInput = React.forwardRef<HTMLInputElement, MantineNumberInputProps>(
 					classNames?.input
 				),
 				rightSection: twMerge(`m-[1px] `, classNames?.rightSection),
-                control: twMerge(`enabled:text-primary-500`, classNames?.control),
+				control: twMerge(`enabled:text-primary-500`, classNames?.control),
+				error: twMerge(`text-red-400`, classNames?.error),
 			}}
 			ref={ref}
 			{...props}

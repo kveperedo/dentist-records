@@ -60,9 +60,10 @@ const TransactionForm = ({ onSubmit, onClose, existingData }: TransactionFormPro
 				<Controller
 					control={control}
 					name='fees'
-					render={({ field }) => {
+					render={({ field, fieldState: { error } }) => {
 						return (
 							<NumberInput
+								error={error?.message}
 								required
 								label='Fees'
 								min={Transaction.shape.fees.minValue ?? undefined}
