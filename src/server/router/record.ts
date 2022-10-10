@@ -44,7 +44,7 @@ export const recordRouter = createProtectedRouter()
 					id: input,
 				},
 				include: {
-					entries: true,
+					entries: { orderBy: { date: 'desc' } },
 				},
 			});
 
