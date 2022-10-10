@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Radio } from '@mantine/core';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -7,7 +8,7 @@ import Button from '../../components/Button';
 import DatePicker from '../../components/DatePicker';
 import Select from '../../components/Select';
 import TextInput from '../../components/TextInput';
-import { Record, RecordStatus } from '../../types/schema';
+import { Gender, Record, RecordStatus } from '../../types/schema';
 import { capitalizeFirstLetter } from '../../utils/text';
 
 type RecordType = z.infer<typeof Record>;
@@ -24,6 +25,7 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 		defaultValues: {
 			status: RecordStatus.enum.single,
 			birthday: new Date(),
+			gender: Gender.enum.male,
 		},
 	});
 
@@ -41,7 +43,30 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex flex-col gap-4'>
 			<TextInput required label='Name' {...register('name')} />
 			<div className='flex gap-4'>
-				<TextInput required className='flex-1' label='Occupation' {...register('occupation')} />
+				<Controller
+					control={control}
+					name='gender'
+					render={({ field }) => (
+						<Radio.Group
+							label='Gender'
+							required
+							classNames={{ label: 'text-sm text-primary-700 font-normal [&>span]:text-primary-700' }}
+							{...field}
+						>
+							{Gender.options.map((option) => (
+								<Radio
+									classNames={{
+										radio: 'checked:bg-primary-400 checked:border-primary-400 focus-visible:outline-primary-600',
+									}}
+									key={option}
+									value={option}
+									label={capitalizeFirstLetter(option)}
+								/>
+							))}
+						</Radio.Group>
+					)}
+				/>
+
 				<Controller
 					control={control}
 					name='status'
@@ -78,6 +103,7 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 			</div>
 			<TextInput required label='Address' {...register('address')} />
 			<div className='flex gap-4'>
+				<TextInput required className='flex-1' label='Occupation' {...register('occupation')} />
 				<TextInput required className='flex-1' label='Complaint' {...register('complaint')} />
 				<TextInput required className='flex-1' label='Telephone' {...register('telephone')} />
 			</div>

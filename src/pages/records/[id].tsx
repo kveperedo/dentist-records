@@ -215,12 +215,19 @@ const RecordPage: NextPage<AppProps> = () => {
 												readOnly
 											/>
 										</div>
-										<TextInput value={data.complaint} label='Complaint' readOnly />
+										<div className='flex gap-4 [&>*]:flex-1'>
+											<TextInput
+												value={capitalizeFirstLetter(data.gender)}
+												label='Gender'
+												readOnly
+											/>
+											<TextInput value={data.complaint} label='Complaint' readOnly />
+										</div>
 									</div>
 								</ScrollArea>
 							</div>
-							<div className='flex-[2] bg-primary-50 rounded-r p-4 flex flex-col gap-4'>
-								<div className='flex justify-between items-center'>
+							<div className='flex flex-[2] flex-col gap-4 rounded-r bg-primary-50 p-4'>
+								<div className='flex items-center justify-between'>
 									<p className='text-xl text-primary-700'>Transactions</p>
 									<Button onClick={handleAddTransaction} leftIcon={<PlusIcon />}>
 										Add Transaction

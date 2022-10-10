@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const RecordStatus = z.enum(['single', 'married', 'divorced', 'separated', 'widowed']);
+export const Gender = z.enum(['male', 'female']);
 
 export const Record = z.object({
 	id: z.string().optional(),
@@ -11,6 +12,7 @@ export const Record = z.object({
 	status: RecordStatus,
 	complaint: z.string(),
 	birthday: z.date(),
+	gender: Gender,
 });
 
 export const Transaction = z.object({

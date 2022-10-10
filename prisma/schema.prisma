@@ -70,15 +70,21 @@ model VerificationToken {
 }
 
 model Record {
-    id         String        @id @default(cuid())
-    name       String
+    id         String           @id @default(cuid())
+    name       String           @db.Citext
     address    String
     telephone  String
     occupation String
-    status     MaritalStatus @default(single)
+    gender     Gender           @default(male)
+    status     MaritalStatus    @default(single)
     complaint  String
     birthday   DateTime
     entries    TreatmentEntry[]
+}
+
+enum Gender {
+    male
+    female
 }
 
 enum MaritalStatus {
