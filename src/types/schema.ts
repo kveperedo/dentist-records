@@ -20,5 +20,5 @@ export const Transaction = z.object({
 	date: z.date(),
 	tooth: z.string(),
 	service: z.string(),
-	fees: z.number().min(0),
+	fees: z.number().gt(0),
 });
