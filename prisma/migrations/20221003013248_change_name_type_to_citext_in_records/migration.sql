@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Record" ALTER COLUMN "name" SET DATA TYPE CITEXT;
