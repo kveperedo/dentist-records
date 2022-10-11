@@ -1,4 +1,14 @@
-import { MagnifyingGlassIcon, PlusIcon, ArrowUpIcon, HamburgerMenuIcon } from '@radix-ui/react-icons';
+import {
+	MagnifyingGlassIcon,
+	PlusIcon,
+	ArrowUpIcon,
+	HamburgerMenuIcon,
+	DotsVerticalIcon,
+	Pencil1Icon,
+	TrashIcon,
+	EnterIcon,
+	Cross1Icon,
+} from '@radix-ui/react-icons';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
@@ -6,25 +16,28 @@ import Button from '../components/Button';
 import { useEffect, useState } from 'react';
 import TextInput from '../components/TextInput';
 import { useModals } from '@mantine/modals';
-import { Pagination, ScrollArea } from '@mantine/core';
+import { Menu, Pagination, ScrollArea } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { join } from 'tailwind-merge';
 import LoadingOverlay from '../components/LoadingOverlay';
 import RecordForm from '../features/record/RecordForm';
-import { showNotification } from '../utils/mantine';
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { AppProps } from './_app';
 import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../components/Table';
 import EmptyOverlay from '../components/EmptyOverlay';
 import { atom, useAtom } from 'jotai';
+import { showRecordNotification } from '../features/record/utils';
+import { z } from 'zod';
+import { Record } from '../types/schema';
+
+type RecordType = Required<z.infer<typeof Record>>;
 
 const NoResultsFound = () => {
 	return (
 		<div className='flex h-full flex-col items-center justify-center gap-4'>
 			<EmptyOverlay
-				classes={{ container: join('bg-white rouneded shadow-md') }}
+				classes={{ container: join('rounded bg-white shadow-md') }}
 				imageSrc='/assets/empty.svg'
 				imageAlt='empty record'
 				title='No records found'
@@ -35,13 +48,19 @@ const NoResultsFound = () => {
 };
 
 interface RecordTableProps {
-	records: { id: string; name: string }[];
+	records: RecordType[];
 	isSortedAsc: boolean;
 	onSortClick: () => void;
-	onRecordDelete: (id: string) => void;
+	onActionClick: (type: 'delete' | 'edit', record: RecordType) => void;
 }
 
-const RecordTable = ({ records, isSortedAsc, onSortClick, onRecordDelete }: RecordTableProps) => {
+const RecordTable = ({ records, isSortedAsc, onSortClick, onActionClick }: RecordTableProps) => {
+	const router = useRouter();
+
+	const handleRecordView = (id: string) => {
+		router.push(`/records/${id}`);
+	};
+
 	return (
 		<TableContainer>
 			<TableHeader>
@@ -64,20 +83,57 @@ const RecordTable = ({ records, isSortedAsc, onSortClick, onRecordDelete }: Reco
 			</TableHeader>
 			<tbody>
 				{records.map((record) => (
-					<TableRow className='odd:bg-zinc-50' key={record.id}>
+					<TableRow
+						className='cursor-pointer odd:bg-zinc-50'
+						onClick={() => handleRecordView(record.id)}
+						key={record.id}
+					>
 						<TableCell>{record.name}</TableCell>
 						<TableCell>
-							<div className='flex justify-end gap-4'>
-								<Link href={`/records/${record.id}`}>
-									<Button variant='secondary' size='sm'>
-										View
+							<Menu width={150}>
+								<Menu.Target>
+									<Button
+										onClick={(event) => event.stopPropagation()}
+										className='ml-auto p-2'
+										variant='ghost'
+									>
+										<DotsVerticalIcon className='h-5 w-5' />
 									</Button>
-								</Link>
+								</Menu.Target>
 
-								<Button variant='outlined' onClick={() => onRecordDelete(record.id)} size='sm'>
-									Delete
-								</Button>
-							</div>
+								<Menu.Dropdown>
+									<Menu.Item
+										className='text-slate-700 hover:bg-primary-100'
+										icon={<EnterIcon className='h-5 w-5' />}
+										onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+											event.stopPropagation();
+											handleRecordView(record.id);
+										}}
+									>
+										View
+									</Menu.Item>
+									<Menu.Item
+										className='text-slate-700 hover:bg-primary-100'
+										icon={<Pencil1Icon className='h-5 w-5' />}
+										onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+											event.stopPropagation();
+											onActionClick('edit', record);
+										}}
+									>
+										Edit
+									</Menu.Item>
+									<Menu.Item
+										className='text-red-400 hover:bg-red-100'
+										icon={<TrashIcon className='h-5 w-5' />}
+										onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+											event.stopPropagation();
+											onActionClick('delete', record);
+										}}
+									>
+										Delete
+									</Menu.Item>
+								</Menu.Dropdown>
+							</Menu>
 						</TableCell>
 					</TableRow>
 				))}
@@ -107,48 +163,38 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 		{
 			onError: (error) => {
 				console.log(error);
-				showNotification({
-					status: 'error',
-					title: 'Error',
-					message: 'An error occurred while getting patient records.',
-				});
+				showRecordNotification('queryError');
 			},
 		}
 	);
 	const { mutate: addRecord, isLoading: isAddRecordLoading } = trpc.useMutation(['record.add'], {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.all']);
-			showNotification({
-				status: 'success',
-				title: 'Add Record',
-				message: 'Successfully added patient to records.',
-			});
+			showRecordNotification('addSuccess');
 		},
 		onError: (error) => {
 			console.log(error);
-			showNotification({
-				status: 'error',
-				title: 'Error',
-				message: 'An error occurred while adding patient to records.',
-			});
+			showRecordNotification('addError');
 		},
 	});
 	const { mutate: deleteRecord, isLoading: isDeleteRecordLoading } = trpc.useMutation(['record.delete'], {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.all']);
-			showNotification({
-				status: 'success',
-				title: 'Delete Record',
-				message: "Successfully deleted the patient's records.",
-			});
+			showRecordNotification('deleteSuccess');
 		},
 		onError: (error) => {
 			console.log(error);
-			showNotification({
-				status: 'error',
-				title: 'Error',
-				message: "An error occurred while deleting the patient's records.",
-			});
+			showRecordNotification('deleteError');
+		},
+	});
+	const { mutate: editRecord, isLoading: isEditRecordLoading } = trpc.useMutation(['record.edit'], {
+		onSuccess: () => {
+			utils.invalidateQueries(['record.all']);
+			showRecordNotification('editSuccess');
+		},
+		onError: (error) => {
+			console.log(error);
+			showRecordNotification('editError');
 		},
 	});
 
@@ -164,16 +210,17 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 		}
 	}, [isGetRecordsLoading]);
 
-	const isTableLoading = isGetRecordsLoading || isAddRecordLoading || isDeleteRecordLoading;
+	const isTableLoading = isGetRecordsLoading || isAddRecordLoading || isDeleteRecordLoading || isEditRecordLoading;
 
-	const handleAddRecord = () => {
+	const handleOpenRecordForm = (record?: RecordType) => {
 		const modalId = modals.openModal({
-			title: 'Add Record',
+			title: `${record ? 'Edit' : 'Add'} Record`,
 			children: (
 				<RecordForm
+					existingData={record}
 					onSubmit={(values) => {
 						modals.closeModal(modalId);
-						addRecord(values);
+						return record ? editRecord({ id: record.id, ...values }) : addRecord(values);
 					}}
 					onClose={() => modals.closeModal(modalId)}
 				/>
@@ -206,6 +253,16 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 		});
 	};
 
+	const handleActionClick: RecordTableProps['onActionClick'] = (type, record) => {
+		if (type === 'delete') {
+			return handleDeleteRecord(record.id);
+		}
+
+		if (type === 'edit') {
+			return handleOpenRecordForm(record);
+		}
+	};
+
 	if (status == 'unauthenticated') {
 		router.replace('/sign-in');
 	}
@@ -235,14 +292,21 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 								onChange={(e) => setSearchTerm(e.target.value)}
 								rightIcon={
 									<span className='flex h-full w-10 shrink-0 cursor-pointer items-center justify-center'>
-										<MagnifyingGlassIcon className='h-5 w-5 text-primary-500' />
+										{searchTerm.length ? (
+											<Cross1Icon
+												className='h-5 w-5 text-primary-500'
+												onClick={() => setSearchTerm('')}
+											/>
+										) : (
+											<MagnifyingGlassIcon className='h-5 w-5 text-primary-500' />
+										)}
 									</span>
 								}
 								placeholder='Search users'
 							/>
 
 							<Button
-								onClick={handleAddRecord}
+								onClick={() => handleOpenRecordForm()}
 								className='ml-auto'
 								leftIcon={<PlusIcon className='h-5 w-5 text-base text-inherit' />}
 							>
@@ -262,7 +326,7 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 									<RecordTable
 										records={data?.records ?? []}
 										isSortedAsc={isSortedAsc}
-										onRecordDelete={handleDeleteRecord}
+										onActionClick={handleActionClick}
 										onSortClick={() => setIsSortedAsc((prev) => !prev)}
 									/>
 								</ScrollArea>

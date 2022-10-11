@@ -44,6 +44,17 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 								closeButton: '[&>svg]:w-5 [&>svg]:h-5 text-primary-600',
 							},
 						},
+						Menu: {
+							classNames: {
+								dropdown: 'shadow-sm p-2 border-zinc-200',
+								item: 'transition-colors',
+							},
+							defaultProps: {
+								transition: 'fade',
+								withArrow: true,
+								withinPortal: true,
+							},
+						},
 					},
 				}}
 				emotionCache={emotionCache}

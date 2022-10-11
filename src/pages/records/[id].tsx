@@ -1,7 +1,7 @@
-import { ScrollArea } from '@mantine/core';
+import { Menu, ScrollArea } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 import { TreatmentEntry } from '@prisma/client';
-import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, DotsVerticalIcon, Pencil1Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import { useSession } from 'next-auth/react';
@@ -14,6 +14,7 @@ import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } fro
 import TextInput from '../../components/TextInput';
 import RecordForm from '../../features/record/RecordForm';
 import TransactionForm from '../../features/record/TransactionForm';
+import { showRecordNotification } from '../../features/record/utils';
 import { showNotification } from '../../utils/mantine';
 import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
@@ -22,14 +23,15 @@ import { AppProps } from '../_app';
 const numberFormatter = new Intl.NumberFormat('en-US', {
 	style: 'currency',
 	currency: 'PHP',
-	maximumSignificantDigits: 2,
+	minimumFractionDigits: 2,
 });
 
 interface EntryTableProps {
 	entries: TreatmentEntry[];
+	onActionClick: (type: 'edit' | 'delete', entry: TreatmentEntry) => void;
 }
 
-const EntryTable = ({ entries }: EntryTableProps) => {
+const EntryTable = ({ entries, onActionClick }: EntryTableProps) => {
 	if (entries.length === 0) {
 		return (
 			<div className='flex h-full flex-col items-center justify-center gap-4'>
@@ -50,8 +52,9 @@ const EntryTable = ({ entries }: EntryTableProps) => {
 					<tr>
 						<TableHeaderCell className='w-2/12 break-words'>Date</TableHeaderCell>
 						<TableHeaderCell className='w-4/12 break-words'>Tooth</TableHeaderCell>
-						<TableHeaderCell className='w-4/12 break-words'>Service</TableHeaderCell>
+						<TableHeaderCell className='w-3/12 break-words'>Service</TableHeaderCell>
 						<TableHeaderCell className='w-2/12 break-words text-right'>Fees</TableHeaderCell>
+						<TableHeaderCell className='w-1/12 break-words text-right'>Actions</TableHeaderCell>
 					</tr>
 				</TableHeader>
 				<tbody>
@@ -68,6 +71,32 @@ const EntryTable = ({ entries }: EntryTableProps) => {
 							</TableCell>
 							<TableCell className='text-right'>
 								<p>{numberFormatter.format(entry.fees)}</p>
+							</TableCell>
+							<TableCell>
+								<Menu width={150}>
+									<Menu.Target>
+										<Button className='m-auto p-2' variant='ghost'>
+											<DotsVerticalIcon className='h-5 w-5' />
+										</Button>
+									</Menu.Target>
+
+									<Menu.Dropdown>
+										<Menu.Item
+											className='text-slate-700 hover:bg-primary-100'
+											icon={<Pencil1Icon className='h-5 w-5' />}
+											onClick={() => onActionClick('edit', entry)}
+										>
+											Edit
+										</Menu.Item>
+										<Menu.Item
+											className='text-red-400 hover:bg-red-100'
+											icon={<TrashIcon className='h-5 w-5' />}
+											onClick={() => onActionClick('delete', entry)}
+										>
+											Delete
+										</Menu.Item>
+									</Menu.Dropdown>
+								</Menu>
 							</TableCell>
 						</TableRow>
 					))}
@@ -92,19 +121,11 @@ const RecordPage: NextPage<AppProps> = () => {
 	const { mutate: editRecord, isLoading: isEditRecordLoading } = trpc.useMutation(['record.edit'], {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.specific', id]);
-			showNotification({
-				status: 'success',
-				title: 'Edit Record',
-				message: "Successfully edited patient's records.",
-			});
+			showRecordNotification('editSuccess');
 		},
 		onError: (error) => {
 			console.log(error);
-			showNotification({
-				status: 'error',
-				title: 'Error',
-				message: 'An error occurred while adding patient to records.',
-			});
+			showRecordNotification('editError');
 		},
 	});
 	const { mutate: addTransaction, isLoading: isAddTransactionLoading } = trpc.useMutation(['transaction.add'], {
@@ -125,16 +146,65 @@ const RecordPage: NextPage<AppProps> = () => {
 			});
 		},
 	});
-	const isLoading = isGetRecordLoading || isEditRecordLoading || isAddTransactionLoading;
+	const { mutate: deleteTransaction, isLoading: isDeleteTransactionLoading } = trpc.useMutation(
+		['transaction.delete'],
+		{
+			onSuccess: () => {
+				utils.invalidateQueries(['record.specific', id]);
+				showNotification({
+					status: 'success',
+					title: 'Delete Transaction',
+					message: 'Successfully deleted the transaction.',
+				});
+			},
+			onError: (error) => {
+				console.log(error);
+				showNotification({
+					status: 'error',
+					title: 'Error',
+					message: 'An error occurred while deleting the transaction.',
+				});
+			},
+		}
+	);
+	const { mutate: editTransaction, isLoading: isEditTransactionLoading } = trpc.useMutation(['transaction.edit'], {
+		onSuccess: () => {
+			utils.invalidateQueries(['record.specific', id]);
+			showNotification({
+				status: 'success',
+				title: 'Edit Transaction',
+				message: 'Successfully edited the transaction.',
+			});
+		},
+		onError: (error) => {
+			console.log(error);
+			showNotification({
+				status: 'error',
+				title: 'Error',
+				message: 'An error occurred while editing the transaction.',
+			});
+		},
+	});
+	const isLoading =
+		isGetRecordLoading ||
+		isEditRecordLoading ||
+		isAddTransactionLoading ||
+		isDeleteTransactionLoading ||
+		isEditTransactionLoading;
 
-	const handleAddTransaction = () => {
+	const handleOpenTransactionForm = (entry?: TreatmentEntry) => {
+		console.log(entry);
+
 		const modalId = modals.openModal({
-			title: 'Add Transaction',
+			title: `${entry ? 'Edit' : 'Add'} Transaction`,
 			children: (
 				<TransactionForm
+					existingData={entry}
 					onSubmit={(values) => {
 						modals.closeModal(modalId);
-						addTransaction({ ...values, recordId: id });
+						return entry
+							? editTransaction({ ...values, id: entry.id })
+							: addTransaction({ ...values, recordId: id });
 					}}
 					onClose={() => modals.closeModal(modalId)}
 				/>
@@ -162,6 +232,36 @@ const RecordPage: NextPage<AppProps> = () => {
 			),
 			className: '[&_.mantine-Modal-modal]:w-[768px]',
 		});
+	};
+
+	const handleActionClick: EntryTableProps['onActionClick'] = (type, entry) => {
+		if (type === 'edit') {
+			handleOpenTransactionForm(entry);
+		}
+
+		if (type === 'delete') {
+			const modalId = modals.openModal({
+				title: 'Delete record',
+				children: (
+					<>
+						<p className='text-primary-600'>Are you sure you want to delete this transaction?</p>
+						<div className='mt-4 flex justify-end gap-4'>
+							<Button variant='outlined' onClick={() => modals.closeModal(modalId)}>
+								Cancel
+							</Button>
+							<Button
+								onClick={() => {
+									modals.closeModal(modalId);
+									deleteTransaction(entry.id);
+								}}
+							>
+								Delete Record
+							</Button>
+						</div>
+					</>
+				),
+			});
+		}
 	};
 
 	if (status === 'unauthenticated') {
@@ -229,11 +329,11 @@ const RecordPage: NextPage<AppProps> = () => {
 							<div className='flex flex-[2] flex-col gap-4 rounded-r bg-primary-50 p-4'>
 								<div className='flex items-center justify-between'>
 									<p className='text-xl text-primary-700'>Transactions</p>
-									<Button onClick={handleAddTransaction} leftIcon={<PlusIcon />}>
+									<Button onClick={() => handleOpenTransactionForm()} leftIcon={<PlusIcon />}>
 										Add Transaction
 									</Button>
 								</div>
-								<EntryTable entries={data?.entries ?? []} />
+								<EntryTable entries={data?.entries ?? []} onActionClick={handleActionClick} />
 							</div>
 						</div>
 					)}

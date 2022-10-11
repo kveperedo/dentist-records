@@ -67,6 +67,7 @@ const TransactionForm = ({ onSubmit, onClose, existingData }: TransactionFormPro
 								required
 								label='Fees'
 								min={Transaction.shape.fees.minValue ?? undefined}
+								precision={2}
 								{...field}
 							/>
 						);
