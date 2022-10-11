@@ -11,6 +11,7 @@
 		"studio": "npx prisma studio"
 	},
 	"dependencies": {
+		"@babel/core": "^7.0.0",
 		"@emotion/react": "^11.10.0",
 		"@emotion/server": "^11.10.0",
 		"@hookform/resolvers": "^2.9.7",
