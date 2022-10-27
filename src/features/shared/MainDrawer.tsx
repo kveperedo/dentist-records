@@ -15,18 +15,19 @@ const MainDrawer = ({ isDrawerOpen, onClose }: MainDrawerProps) => {
 
 	return (
 		<Drawer
+			position='right'
 			title='Dental Record'
 			classNames={{
 				header: join(`items-center`),
 				title: join(`text-xl font-medium text-primary-800`),
-				drawer: join(`p-8 rounded-r flex flex-col`),
-				closeButton: join(`[&>svg]:w-5 [&>svg]:h-5 text-primary-600`),
+				drawer: join(`flex flex-col rounded-l p-6`),
+				closeButton: join(`text-primary-600 [&>svg]:h-5 [&>svg]:w-5`),
 			}}
 			opened={isDrawerOpen}
 			onClose={onClose}
 		>
-			<div className='flex flex-1 flex-col items-center mt-8'>
-				<div className='flex flex-col w-full gap-1'>
+			<div className='mt-8 flex flex-1 flex-col items-center'>
+				<div className='flex w-full flex-col gap-1'>
 					<ActiveLink
 						href='/'
 						childRoutes={['/records']}
@@ -38,8 +39,8 @@ const MainDrawer = ({ isDrawerOpen, onClose }: MainDrawerProps) => {
 						Settings
 					</ActiveLink>
 				</div>
-				<div className='flex flex-col gap-4 mt-auto w-full'>
-					<div className='flex gap-4 items-center justify-center'>
+				<div className='mt-auto flex w-full flex-col gap-4'>
+					<div className='flex items-center justify-center gap-4'>
 						<Avatar src={session?.user?.image} radius='xl' />
 						<p className='text-primary-500'>{session?.user?.name}</p>
 					</div>

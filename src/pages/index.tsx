@@ -2,7 +2,6 @@ import {
 	MagnifyingGlassIcon,
 	PlusIcon,
 	ArrowUpIcon,
-	HamburgerMenuIcon,
 	DotsVerticalIcon,
 	Pencil1Icon,
 	TrashIcon,
@@ -30,6 +29,7 @@ import { atom, useAtom } from 'jotai';
 import { showRecordNotification } from '../features/record/utils';
 import { z } from 'zod';
 import { Record } from '../types/schema';
+import useIsSmallBreakpoint from '../hooks/useIsSmallBreakpoint';
 
 type RecordType = Required<z.infer<typeof Record>>;
 
@@ -90,7 +90,7 @@ const RecordTable = ({ records, isSortedAsc, onSortClick, onActionClick }: Recor
 					>
 						<TableCell>{record.name}</TableCell>
 						<TableCell>
-							<Menu width={150}>
+							<Menu width={150} position='bottom-end'>
 								<Menu.Target>
 									<Button
 										onClick={(event) => event.stopPropagation()}
@@ -147,8 +147,9 @@ const SEARCH_INPUT_DEBOUNCE_TIME = 250;
 const pageNumberAtom = atom(1);
 const isSortedAscAtom = atom(true);
 
-const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
+const HomePage: NextPage<AppProps> = () => {
 	const modals = useModals();
+	const isSmallBreakpoint = useIsSmallBreakpoint();
 	const utils = trpc.useContext();
 	const { status } = useSession();
 	const router = useRouter();
@@ -225,7 +226,8 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 					onClose={() => modals.closeModal(modalId)}
 				/>
 			),
-			className: '[&_.mantine-Modal-modal]:w-[768px]',
+			fullScreen: isSmallBreakpoint,
+			className: 'w-auto sm:[&_.mantine-Modal-modal]:w-[768px]',
 		});
 	};
 
@@ -278,15 +280,11 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 			</Head>
 
 			{status === 'loading' || isFirstInitialLoading ? (
-				<LoadingOverlay visible />
+				<LoadingOverlay className='mt-16' visible />
 			) : (
-				<div className='min-h-screen bg-primary-50'>
-					<main className='container m-auto flex h-screen flex-1 flex-col p-8'>
-						<div className='mb-8 flex items-center gap-4'>
-							<Button variant='secondary' className='px-[7px]' onClick={openDrawer}>
-								<HamburgerMenuIcon className='h-5 w-5' />
-							</Button>
-
+				<div className='h-[calc(100vh-64px)] bg-primary-50'>
+					<main className='container m-auto flex h-full flex-1 flex-col p-6 sm:py-6 sm:px-0'>
+						<div className='mb-6 flex items-center gap-4'>
 							<TextInput
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
@@ -307,8 +305,11 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 
 							<Button
 								onClick={() => handleOpenRecordForm()}
-								className='ml-auto'
 								leftIcon={<PlusIcon className='h-5 w-5 text-base text-inherit' />}
+								classNames={{
+									root: 'ml-auto px-[7px] h-10 sm:px-4 sm:h-auto',
+									label: 'hidden sm:flex',
+								}}
 							>
 								Add Record
 							</Button>
@@ -317,7 +318,12 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 						{noResultsFound ? (
 							<NoResultsFound />
 						) : (
-							<div className='mb-8 flex flex-1 overflow-hidden rounded bg-white shadow-md'>
+							<div
+								className={join(
+									'flex flex-1 overflow-hidden rounded bg-white shadow',
+									pageCount > 1 && 'mb-6'
+								)}
+							>
 								<ScrollArea
 									className='clip-rounded relative flex flex-1'
 									classNames={{ viewport: 'h-full' }}
@@ -333,23 +339,25 @@ const HomePage: NextPage<AppProps> = ({ openDrawer }) => {
 							</div>
 						)}
 
-						<Pagination
-							className='mt-auto'
-							classNames={{
-								item: `
+						{pageCount > 1 && (
+							<Pagination
+								className='mt-auto'
+								classNames={{
+									item: `
 									text-primary-800 [&[data-active]]:bg-primary-600 
 									[&[data-active]]:text-primary-50 text-base font-poppins
 									border-primary-100 enabled:hover:border-primary-300 bg-white
 									font-normal transition-colors disabled:bg-primary-300
 									`,
-							}}
-							page={pageNumber}
-							total={pageCount}
-							onChange={setPageNumber}
-							position='center'
-							withControls
-							withEdges
-						/>
+								}}
+								page={pageNumber}
+								total={pageCount}
+								onChange={setPageNumber}
+								position='center'
+								withControls
+								withEdges
+							/>
+						)}
 					</main>
 				</div>
 			)}

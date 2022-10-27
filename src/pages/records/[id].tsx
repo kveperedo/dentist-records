@@ -1,119 +1,93 @@
-import { Menu, ScrollArea } from '@mantine/core';
+import { Tabs } from '@mantine/core';
 import { useModals } from '@mantine/modals';
-import { TreatmentEntry } from '@prisma/client';
-import { ArrowLeftIcon, DotsVerticalIcon, Pencil1Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
-import dayjs from 'dayjs';
+import { Record, TreatmentEntry } from '@prisma/client';
+import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
 import { NextPage } from 'next';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Button from '../../components/Button';
-import EmptyOverlay from '../../components/EmptyOverlay';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../../components/Table';
-import TextInput from '../../components/TextInput';
+import { EntryTableProps } from '../../features/record/EntryTable';
 import RecordForm from '../../features/record/RecordForm';
+import RecordInfoPanel from '../../features/record/RecordPanel';
 import TransactionForm from '../../features/record/TransactionForm';
+import TransactionPanel from '../../features/record/TransactionPanel';
 import { showRecordNotification } from '../../features/record/utils';
+import useIsSmallBreakpoint from '../../hooks/useIsSmallBreakpoint';
 import { showNotification } from '../../utils/mantine';
-import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
 import { AppProps } from '../_app';
 
-const numberFormatter = new Intl.NumberFormat('en-US', {
-	style: 'currency',
-	currency: 'PHP',
-	minimumFractionDigits: 2,
-});
-
-interface EntryTableProps {
-	entries: TreatmentEntry[];
-	onActionClick: (type: 'edit' | 'delete', entry: TreatmentEntry) => void;
+interface TabPanelContainerProps {
+	children: React.ReactNode;
+	action: React.ReactNode;
 }
 
-const EntryTable = ({ entries, onActionClick }: EntryTableProps) => {
-	if (entries.length === 0) {
-		return (
-			<div className='flex h-full flex-col items-center justify-center gap-4'>
-				<EmptyOverlay
-					imageAlt='empty transactions'
-					imageSrc='/assets/empty.svg'
-					title='No transactions yet'
-					description='Add a transaction by clicking the button in the upper right corner!'
-				/>
-			</div>
-		);
-	}
-
+const TabPanelContainer = ({ action, children }: TabPanelContainerProps) => {
 	return (
-		<ScrollArea className='clip-rounded relative flex flex-1' classNames={{ viewport: 'h-full' }}>
-			<TableContainer>
-				<TableHeader>
-					<tr>
-						<TableHeaderCell className='w-2/12 break-words'>Date</TableHeaderCell>
-						<TableHeaderCell className='w-4/12 break-words'>Tooth</TableHeaderCell>
-						<TableHeaderCell className='w-3/12 break-words'>Service</TableHeaderCell>
-						<TableHeaderCell className='w-2/12 break-words text-right'>Fees</TableHeaderCell>
-						<TableHeaderCell className='w-1/12 break-words text-right'>Actions</TableHeaderCell>
-					</tr>
-				</TableHeader>
-				<tbody>
-					{entries.map((entry) => (
-						<TableRow className='odd:bg-zinc-50' key={entry.id}>
-							<TableCell>
-								<p>{dayjs(entry.date).format('MMMM DD, YYYY')}</p>
-							</TableCell>
-							<TableCell>
-								<p>{entry.tooth}</p>
-							</TableCell>
-							<TableCell>
-								<p className='whitespace-pre'>{entry.service}</p>
-							</TableCell>
-							<TableCell className='text-right'>
-								<p>{numberFormatter.format(entry.fees)}</p>
-							</TableCell>
-							<TableCell>
-								<Menu width={150}>
-									<Menu.Target>
-										<Button className='m-auto p-2' variant='ghost'>
-											<DotsVerticalIcon className='h-5 w-5' />
-										</Button>
-									</Menu.Target>
+		<div className='mt-0 flex h-full flex-col gap-4'>
+			<div className='flex justify-between'>
+				<Link href='/'>
+					<Button variant='ghost' leftIcon={<ArrowLeftIcon className='h-5 w-5 text-primary-600' />}>
+						Back
+					</Button>
+				</Link>
 
-									<Menu.Dropdown>
-										<Menu.Item
-											className='text-slate-700 hover:bg-primary-100'
-											icon={<Pencil1Icon className='h-5 w-5' />}
-											onClick={() => onActionClick('edit', entry)}
-										>
-											Edit
-										</Menu.Item>
-										<Menu.Item
-											className='text-red-400 hover:bg-red-100'
-											icon={<TrashIcon className='h-5 w-5' />}
-											onClick={() => onActionClick('delete', entry)}
-										>
-											Delete
-										</Menu.Item>
-									</Menu.Dropdown>
-								</Menu>
-							</TableCell>
-						</TableRow>
-					))}
-				</tbody>
-			</TableContainer>
-		</ScrollArea>
+				{action}
+			</div>
+			{children}
+		</div>
 	);
 };
 
-const getAge = (dateOfBirth: Date) => {
-	const date = dayjs(dateOfBirth);
-	return dayjs().diff(date, 'year');
+interface MobileRecordPageProps {
+	data: Record & {
+		entries: TreatmentEntry[];
+	};
+	onActionClick: EntryTableProps['onActionClick'];
+	onEditRecord: () => void;
+	onAddTransaction: () => void;
+}
+
+const MobileRecordPage = ({ data, onActionClick, onEditRecord, onAddTransaction }: MobileRecordPageProps) => {
+	return (
+		<Tabs defaultValue='record' variant='default'>
+			<Tabs.List grow>
+				<Tabs.Tab value='record'>Record</Tabs.Tab>
+				<Tabs.Tab value='transaction'>Transactions</Tabs.Tab>
+				<Tabs.Tab value='test'>Images</Tabs.Tab>
+			</Tabs.List>
+			<Tabs.Panel value='record'>
+				<TabPanelContainer
+					action={
+						<Button onClick={onEditRecord} leftIcon={<Pencil1Icon className='h-5 w-5' />}>
+							Edit Record
+						</Button>
+					}
+				>
+					<RecordInfoPanel data={data} />
+				</TabPanelContainer>
+			</Tabs.Panel>
+			<Tabs.Panel value='transaction'>
+				<TabPanelContainer
+					action={
+						<Button onClick={onAddTransaction} leftIcon={<PlusIcon />}>
+							Add Transaction
+						</Button>
+					}
+				>
+					<TransactionPanel data={data} onActionClick={onActionClick} />
+				</TabPanelContainer>
+			</Tabs.Panel>
+		</Tabs>
+	);
 };
 
 const RecordPage: NextPage<AppProps> = () => {
 	const router = useRouter();
 	const modals = useModals();
+	const isSmallBreakpoint = useIsSmallBreakpoint();
 	const id = router.query.id as string;
 	const utils = trpc.useContext();
 	const { status } = useSession();
@@ -209,7 +183,8 @@ const RecordPage: NextPage<AppProps> = () => {
 					onClose={() => modals.closeModal(modalId)}
 				/>
 			),
-			className: '[&_.mantine-Modal-modal]:w-[768px]',
+			className: 'w-auto sm:[&_.mantine-Modal-modal]:w-[768px]',
+			fullScreen: isSmallBreakpoint,
 		});
 	};
 
@@ -230,7 +205,8 @@ const RecordPage: NextPage<AppProps> = () => {
 					onClose={() => modals.closeModal(modalId)}
 				/>
 			),
-			className: '[&_.mantine-Modal-modal]:w-[768px]',
+			className: 'w-auto sm:[&_.mantine-Modal-modal]:w-[768px]',
+			fullScreen: isSmallBreakpoint,
 		});
 	};
 
@@ -268,73 +244,63 @@ const RecordPage: NextPage<AppProps> = () => {
 		router.replace('/sign-in');
 	}
 
-	return (
-		<div className='min-h-screen bg-primary-100'>
-			<main className='container m-auto flex h-screen p-8'>
-				<div className='relative flex w-full flex-1 flex-col gap-8'>
-					<LoadingOverlay visible={isLoading} />
-					{data && (
-						<div className='flex h-full divide-x-2 divide-primary-200 rounded bg-white shadow-md'>
-							<div className='flex flex-1 flex-col'>
-								<div className='m-4 flex justify-between'>
-									<Link href='/'>
-										<Button
-											variant='ghost'
-											leftIcon={<ArrowLeftIcon className='h-5 w-5 text-primary-600' />}
-										>
-											Go back
-										</Button>
-									</Link>
+	if (isLoading) {
+		return <LoadingOverlay className='mt-16' visible />;
+	}
 
-									<Button
-										variant='secondary'
-										onClick={handleEditRecord}
-										leftIcon={<Pencil1Icon className='h-5 w-5' />}
-									>
-										Edit Record
-									</Button>
-								</div>
-								<ScrollArea classNames={{ root: 'my-4 flex-1 overflow-hidden' }}>
-									<div className='mx-4 flex flex-col gap-4'>
-										<TextInput value={data.name} label='Name' readOnly />
-										<TextInput value={data.occupation} label='Occupation' readOnly />
-										<TextInput value={data.address} label='Address' readOnly />
-										<div className='flex gap-4 [&>*]:flex-1'>
-											<TextInput
-												value={dayjs(data.birthday).format('MMMM DD, YYYY')}
-												label='Birthday'
-												readOnly
-											/>
-											<TextInput value={getAge(data.birthday)} label='Age' readOnly />
-										</div>
-										<div className='flex gap-4 [&>*]:flex-1'>
-											<TextInput value={data.telephone} label='Telephone' readOnly />
-											<TextInput
-												value={capitalizeFirstLetter(data.status)}
-												label='Status'
-												readOnly
-											/>
-										</div>
-										<div className='flex gap-4 [&>*]:flex-1'>
-											<TextInput
-												value={capitalizeFirstLetter(data.gender)}
-												label='Gender'
-												readOnly
-											/>
-											<TextInput value={data.complaint} label='Complaint' readOnly />
-										</div>
+	return (
+		<div className='h-[calc(100vh-64px)] bg-primary-50'>
+			<main className='container m-auto flex h-full overflow-hidden p-6 sm:py-6 sm:px-0'>
+				<div className='relative flex w-full flex-1 flex-col gap-8'>
+					{data && (
+						<div className='flex h-full flex-col sm:flex-row'>
+							{isSmallBreakpoint ? (
+								<MobileRecordPage
+									data={data}
+									onActionClick={handleActionClick}
+									onEditRecord={handleEditRecord}
+									onAddTransaction={() => handleOpenTransactionForm()}
+								/>
+							) : (
+								<>
+									<div className='flex flex-col gap-4'>
+										<RecordInfoPanel
+											data={data}
+											header={
+												<div className='m-4 flex justify-between'>
+													<Link href='/'>
+														<Button
+															variant='ghost'
+															leftIcon={
+																<ArrowLeftIcon className='h-5 w-5 text-primary-600' />
+															}
+														>
+															Back
+														</Button>
+													</Link>
+
+													<Button
+														variant='secondary'
+														onClick={handleEditRecord}
+														leftIcon={<Pencil1Icon className='h-5 w-5' />}
+													>
+														Edit Record
+													</Button>
+												</div>
+											}
+										/>
 									</div>
-								</ScrollArea>
-							</div>
-							<div className='flex flex-[2] flex-col gap-4 rounded-r bg-primary-50 p-4'>
-								<div className='flex items-center justify-between'>
-									<p className='text-xl text-primary-700'>Transactions</p>
-									<Button onClick={() => handleOpenTransactionForm()} leftIcon={<PlusIcon />}>
-										Add Transaction
-									</Button>
-								</div>
-								<EntryTable entries={data?.entries ?? []} onActionClick={handleActionClick} />
-							</div>
+									<div className='ml-4 mt-4 flex flex-1 flex-col gap-4'>
+										<div className='flex items-center justify-between'>
+											<p className='text-xl text-primary-700'>Transactions</p>
+											<Button onClick={() => handleOpenTransactionForm()} leftIcon={<PlusIcon />}>
+												Add Transaction
+											</Button>
+										</div>
+										<TransactionPanel data={data} onActionClick={handleActionClick} />
+									</div>
+								</>
+							)}
 						</div>
 					)}
 				</div>

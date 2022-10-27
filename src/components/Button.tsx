@@ -22,22 +22,22 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps & React.Co
 						active:bg-primary-800
 						`,
 						variant === 'primary' &&
-						`
+							`
 						active:bg-primary-80 border-primary-600 bg-primary-600
 						hover:bg-primary-700
 						`,
 						variant === 'secondary' &&
-						`
+							`
 						border-transparent bg-primary-200 text-primary-700 
 						hover:bg-primary-300 active:bg-primary-400
 						`,
 						variant === 'ghost' &&
-						`
+							`
 						border-transparent bg-transparent text-primary-600
 							hover:bg-primary-100 active:bg-primary-200
 						`,
 						variant === 'outlined' &&
-						`
+							`
 						border:bg-primary-400 border-primary-100 bg-transparent text-primary-700 
 						hover:border-primary-300 hover:bg-transparent active:bg-primary-100
 						`,
@@ -47,6 +47,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps & React.Co
 						classNames?.root
 					),
 					inner: twMerge(`flex items-center gap-2`, classNames?.inner),
+					label: classNames?.label,
 				}}
 			>
 				{props.children}

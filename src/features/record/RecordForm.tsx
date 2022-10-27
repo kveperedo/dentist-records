@@ -40,9 +40,9 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 	}, [existingData, reset]);
 
 	return (
-		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex flex-col gap-4'>
+		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex h-full flex-col gap-4'>
 			<TextInput required label='Name' {...register('name')} />
-			<div className='flex gap-4'>
+			<div className='flex flex-col gap-4 sm:flex-row'>
 				<Controller
 					control={control}
 					name='gender'
@@ -102,17 +102,19 @@ const RecordForm = ({ onSubmit, onClose, existingData }: RecordFormProps) => {
 				/>
 			</div>
 			<TextInput required label='Address' {...register('address')} />
-			<div className='flex gap-4'>
+			<div className='flex flex-col gap-4 sm:flex-row'>
 				<TextInput required className='flex-1' label='Occupation' {...register('occupation')} />
 				<TextInput required className='flex-1' label='Complaint' {...register('complaint')} />
 				<TextInput required className='flex-1' label='Telephone' {...register('telephone')} />
 			</div>
 
-			<div className='mt-4 flex justify-end gap-4'>
-				<Button variant='outlined' onClick={onClose}>
-					Cancel
-				</Button>
-				<Button type='submit'>Submit</Button>
+			<div className='mt-auto'>
+				<div className='mt-4 flex justify-end gap-4'>
+					<Button variant='outlined' onClick={onClose}>
+						Cancel
+					</Button>
+					<Button type='submit'>Submit</Button>
+				</div>
 			</div>
 		</form>
 	);
