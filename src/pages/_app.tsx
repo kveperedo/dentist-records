@@ -68,11 +68,12 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 						Tabs: {
 							classNames: {
 								root: 'flex flex-col flex-1 h-full',
-								tabsList: 'flex items-stretch shadow-sm divide-x divide-zinc-200',
+								tabsList: 'flex items-stretch',
 								tab: join(
 									`
-									flex-1 rounded-none bg-white py-4 text-sm
-									first:rounded-l last:rounded-r [&[data-active]]:bg-primary-200 [&[data-active]]:text-primary-700
+									flex-1 rounded-none border-b-2 py-4 text-sm transition-colors
+									[&[data-active]]:border-primary-600 [&[data-active]]:font-semibold 
+									[&[data-active]]:text-primary-600
 									`
 								),
 								panel: 'flex-1 mt-6 overflow-auto',

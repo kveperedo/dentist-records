@@ -55,8 +55,8 @@ const MobileRecordPage = ({ data, onActionClick, onEditRecord, onAddTransaction 
 		<Tabs defaultValue='record' variant='default'>
 			<Tabs.List grow>
 				<Tabs.Tab value='record'>Record</Tabs.Tab>
-				<Tabs.Tab value='transaction'>Transactions</Tabs.Tab>
-				<Tabs.Tab value='test'>Images</Tabs.Tab>
+				<Tabs.Tab value='transactions'>Transactions</Tabs.Tab>
+				<Tabs.Tab value='files'>Files</Tabs.Tab>
 			</Tabs.List>
 			<Tabs.Panel value='record'>
 				<TabPanelContainer
@@ -69,7 +69,7 @@ const MobileRecordPage = ({ data, onActionClick, onEditRecord, onAddTransaction 
 					<RecordInfoPanel data={data} />
 				</TabPanelContainer>
 			</Tabs.Panel>
-			<Tabs.Panel value='transaction'>
+			<Tabs.Panel value='transactions'>
 				<TabPanelContainer
 					action={
 						<Button onClick={onAddTransaction} leftIcon={<PlusIcon />}>
@@ -290,14 +290,28 @@ const RecordPage: NextPage<AppProps> = () => {
 											}
 										/>
 									</div>
-									<div className='ml-4 mt-4 flex flex-1 flex-col gap-4'>
-										<div className='flex items-center justify-between'>
-											<p className='text-xl text-primary-700'>Transactions</p>
-											<Button onClick={() => handleOpenTransactionForm()} leftIcon={<PlusIcon />}>
-												Add Transaction
-											</Button>
-										</div>
-										<TransactionPanel data={data} onActionClick={handleActionClick} />
+									<div className='ml-4 flex flex-1 flex-col gap-4'>
+										<Tabs defaultValue='transactions' classNames={{ root: 'w-full', tab: 'px-6' }}>
+											<Tabs.List>
+												<Tabs.Tab value='transactions'>Transactions</Tabs.Tab>
+												<Tabs.Tab value='files'>Files</Tabs.Tab>
+											</Tabs.List>
+											<Tabs.Panel value='transactions'>
+												<div className='flex h-full flex-col items-start justify-between gap-4 overflow-hidden'>
+													<Button
+														onClick={() => handleOpenTransactionForm()}
+														leftIcon={<PlusIcon />}
+													>
+														Add Transaction
+													</Button>
+													<TransactionPanel
+														className='h-[calc(100%-56px)] w-full'
+														data={data}
+														onActionClick={handleActionClick}
+													/>
+												</div>
+											</Tabs.Panel>
+										</Tabs>
 									</div>
 								</>
 							)}
