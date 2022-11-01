@@ -39,8 +39,8 @@ const TransactionForm = ({ onSubmit, onClose, existingData }: TransactionFormPro
 	}, [existingData, reset]);
 
 	return (
-		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex flex-col gap-4'>
-			<div className='flex gap-4 [&>*]:flex-1'>
+		<form onSubmit={handleSubmit(handleFormSubmit)} className='flex h-full flex-col gap-4'>
+			<div className='flex flex-col gap-4 sm:flex-row [&>*]:flex-1'>
 				<Controller
 					control={control}
 					name='date'
@@ -60,12 +60,14 @@ const TransactionForm = ({ onSubmit, onClose, existingData }: TransactionFormPro
 				<Controller
 					control={control}
 					name='fees'
-					render={({ field }) => {
+					render={({ field, fieldState: { error } }) => {
 						return (
 							<NumberInput
+								error={error?.message}
 								required
 								label='Fees'
 								min={Transaction.shape.fees.minValue ?? undefined}
+								precision={2}
 								{...field}
 							/>
 						);
@@ -75,11 +77,13 @@ const TransactionForm = ({ onSubmit, onClose, existingData }: TransactionFormPro
 			<Textarea required label='Tooth' autosize maxRows={5} minRows={2} {...register('tooth')} />
 			<Textarea required label='Service' autosize maxRows={5} minRows={3} {...register('service')} />
 
-			<div className='mt-4 flex justify-end gap-4'>
-				<Button variant='outlined' onClick={onClose}>
-					Cancel
-				</Button>
-				<Button type='submit'>Submit</Button>
+			<div className='mt-auto'>
+				<div className='mt-4 flex justify-end gap-4'>
+					<Button variant='outlined' onClick={onClose}>
+						Cancel
+					</Button>
+					<Button type='submit'>Submit</Button>
+				</div>
 			</div>
 		</form>
 	);

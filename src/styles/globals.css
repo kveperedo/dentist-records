@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 * {
-	@apply focus-visible:outline-slate-700 font-poppins;
+	@apply focus-visible:outline-primary-700 font-poppins;
 }
 
 @layer utilities {

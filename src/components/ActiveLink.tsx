@@ -31,10 +31,10 @@ const ActiveLink = ({ children, href, isAdminRoute = false, icon, childRoutes = 
 			onClick={handleClick}
 			className={twMerge(
 				`
-                    w-full text-slate-600 rounded p-4 flex items-center gap-4 justify-between
-                    hover:bg-slate-100 active:bg-slate-300 transition-colors cursor-pointer
+                    w-full text-primary-600 rounded p-4 flex items-center gap-4 justify-between
+                    hover:bg-primary-100 active:bg-primary-300 transition-colors cursor-pointer
                     `,
-				isMatchedRoute && `text-slate-700 font-semibold bg-slate-300 hover:bg-slate-300`
+				isMatchedRoute && `text-primary-50 font-semibold bg-primary-300 hover:bg-primary-300`
 			)}
 		>
 			{children}

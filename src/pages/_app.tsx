@@ -12,6 +12,8 @@ import { NotificationsProvider } from '@mantine/notifications';
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import MainDrawer from '../features/shared/MainDrawer';
+import Header from '../components/Header';
+import { join } from 'tailwind-merge';
 
 export interface AppProps {
 	openDrawer: () => void;
@@ -24,6 +26,14 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 	useEffect(() => {
 		setIsDrawerOpen(false);
 	}, [router.asPath]);
+
+	const openDrawer = () => {
+		setIsDrawerOpen(true);
+	};
+
+	const closeDrawer = () => {
+		setIsDrawerOpen(false);
+	};
 
 	return (
 		<SessionProvider session={session}>
@@ -38,10 +48,39 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 						Notification: {
 							classNames: {
 								root: 'shadow-sm p-3 before:hidden',
-								title: 'text-base text-slate-700',
-								description: 'text-sm text-slate-500',
+								title: 'text-base text-primary-700',
+								description: 'text-sm text-primary-500',
 								icon: 'bg-transparent mr-2',
-								closeButton: '[&>svg]:w-5 [&>svg]:h-5 text-slate-600',
+								closeButton: '[&>svg]:w-5 [&>svg]:h-5 text-primary-600',
+							},
+						},
+						Menu: {
+							classNames: {
+								dropdown: 'shadow-sm p-2 border-zinc-200',
+								item: 'transition-colors',
+							},
+							defaultProps: {
+								transition: 'fade',
+								withArrow: true,
+								withinPortal: true,
+							},
+						},
+						Tabs: {
+							classNames: {
+								root: 'flex flex-col flex-1 h-full',
+								tabsList: 'flex items-stretch',
+								tab: join(
+									`
+									flex-1 rounded-none border-b-2 py-4 text-sm transition-colors
+									[&[data-active]]:border-primary-600 [&[data-active]]:font-semibold 
+									[&[data-active]]:text-primary-600
+									`
+								),
+								panel: 'flex-1 mt-6 overflow-auto',
+							},
+							defaultProps: {
+								unstyled: true,
+								keepMounted: false,
 							},
 						},
 					},
@@ -52,15 +91,17 @@ const MyApp: AppType = ({ Component, pageProps: { session, ...pageProps } }) => 
 					<ModalsProvider
 						modalProps={{
 							classNames: {
-								title: `text-xl font-medium text-slate-800`,
-								close: `[&>svg]:w-5 [&>svg]:h-5 text-slate-600 focus-visible:outline-slate-700`,
-								modal: `p-8`,
+								title: `text-xl font-medium text-primary-800`,
+								close: `[&>svg]:w-5 [&>svg]:h-5 text-primary-600 focus-visible:outline-primary-700`,
+								modal: `flex flex-col p-6`,
+								body: `flex-1`,
 							},
 							centered: true,
 						}}
 					>
-						<Component {...pageProps} openDrawer={() => setIsDrawerOpen(true)} />
-						<MainDrawer onClose={() => setIsDrawerOpen(false)} isDrawerOpen={isDrawerOpen} />
+						{<Header openDrawer={openDrawer} />}
+						<Component {...pageProps} openDrawer={openDrawer} />
+						<MainDrawer onClose={closeDrawer} isDrawerOpen={isDrawerOpen} />
 					</ModalsProvider>
 				</NotificationsProvider>
 			</MantineProvider>

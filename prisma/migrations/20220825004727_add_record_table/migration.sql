@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
 -- CreateEnum
 CREATE TYPE "MaritalStatus" AS ENUM ('single', 'married', 'divorced', 'separated', 'widowed');
 

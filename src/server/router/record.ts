@@ -22,10 +22,6 @@ export const recordRouter = createProtectedRouter()
 					orderBy: {
 						name: sortType,
 					},
-					select: {
-						id: true,
-						name: true,
-					},
 					where: searchTerm ? { name: { contains: searchTerm, mode: 'insensitive' } } : undefined,
 				}),
 			]);
@@ -44,7 +40,7 @@ export const recordRouter = createProtectedRouter()
 					id: input,
 				},
 				include: {
-					entries: true,
+					entries: { orderBy: { date: 'desc' } },
 				},
 			});
 

@@ -22,7 +22,7 @@ export const TableHeader = ({ children, className, ...props }: TableHeaderProps)
 		<thead
 			className={twMerge(
 				`sticky top-0 z-10 table-header-group 
-            border-separate border-b-2 border-slate-500 text-slate-700`,
+            border-separate border-b-2 border-primary-500 text-primary-700`,
 				className
 			)}
 			{...props}
@@ -39,7 +39,7 @@ interface TableHeaderCellProps
 
 export const TableHeaderCell = ({ children, className, ...props }: TableHeaderCellProps) => {
 	return (
-		<th className={twMerge('bg-slate-200 p-4 py-6 font-semibold text-left', className)} {...props}>
+		<th className={twMerge('bg-primary-200 p-4 py-6 font-semibold text-left', className)} {...props}>
 			{children}
 		</th>
 	);
@@ -52,7 +52,7 @@ interface TableRowProps extends DetailedHTMLProps<HTMLAttributes<HTMLTableRowEle
 export const TableRow = ({ children, className, ...props }: TableRowProps) => {
 	return (
 		<tr
-			className={twMerge('border-collapse text-slate-600 transition-colors hover:bg-slate-50', className)}
+			className={twMerge('border-collapse text-primary-600 transition-colors hover:bg-primary-50', className)}
 			{...props}
 		>
 			{children}

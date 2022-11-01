@@ -13,7 +13,7 @@ const iconMapping: Record<
 		className: IconProps['className'];
 	}
 > = {
-	info: { Icon: InfoCircledIcon, className: 'h-5 w-5 text-slate-500' },
+	info: { Icon: InfoCircledIcon, className: 'h-5 w-5 text-primary-500' },
 	success: { Icon: CheckCircledIcon, className: 'h-5 w-5 text-green-500' },
 	error: { Icon: CrossCircledIcon, className: 'h-5 w-5 text-red-500' },
 };

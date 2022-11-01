@@ -11,13 +11,16 @@ import { join } from 'tailwind-merge';
 const GoogleIcon = () => {
 	return (
 		<svg
-			className='w-5 h-5 text-white mr-2'
+			className='mr-2 h-5 w-5 text-white'
 			focusable='false'
 			aria-hidden='true'
 			viewBox='0 0 24 24'
 			data-testid='GoogleIcon'
 		>
-			<path fill='currentcolor' d='M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z'></path>
+			<path
+				fill='currentcolor'
+				d='M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z'
+			></path>
 		</svg>
 	);
 };
@@ -35,12 +38,12 @@ const SignInPage: NextPage = () => {
 				<link rel='icon' href='/favicon.ico' />
 			</Head>
 
-			<div className='min-h-screen bg-slate-100'>
-				<main className='container m-auto flex h-screen items-center justify-center p-8'>
-					<div className={join(`flex flex-col items-center bg-white rounded shadow-md p-8 gap-4`)}>
-						<h1 className='text-2xl text-slate-700 text-center'>Log In</h1>
+			<div className='min-h-screen bg-primary-100'>
+				<main className='container m-auto flex h-screen items-center justify-center p-6'>
+					<div className={join(`flex flex-col items-center gap-4 rounded bg-white p-6 shadow-md`)}>
+						<h1 className='text-center text-2xl text-primary-700'>Log In</h1>
 						<Image src='/assets/sign-in.svg' alt='sign-in' width={192} height={192} />
-						<p className='text-base text-slate-500 text-center'>
+						<p className='text-center text-base text-primary-500'>
 							Enter your credentials to access your records
 						</p>
 						<Button variant='primary' leftIcon={<GoogleIcon />} onClick={handleSignIn}>

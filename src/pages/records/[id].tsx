@@ -1,90 +1,93 @@
-import { ScrollArea } from '@mantine/core';
+import { Tabs } from '@mantine/core';
 import { useModals } from '@mantine/modals';
-import { TreatmentEntry } from '@prisma/client';
+import { Record, TreatmentEntry } from '@prisma/client';
 import { ArrowLeftIcon, Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
-import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Button from '../../components/Button';
-import EmptyOverlay from '../../components/EmptyOverlay';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { TableCell, TableContainer, TableHeader, TableHeaderCell, TableRow } from '../../components/Table';
-import TextInput from '../../components/TextInput';
+import { EntryTableProps } from '../../features/record/EntryTable';
 import RecordForm from '../../features/record/RecordForm';
+import RecordInfoPanel from '../../features/record/RecordPanel';
 import TransactionForm from '../../features/record/TransactionForm';
+import TransactionPanel from '../../features/record/TransactionPanel';
+import { showRecordNotification } from '../../features/record/utils';
+import useIsSmallBreakpoint from '../../hooks/useIsSmallBreakpoint';
 import { showNotification } from '../../utils/mantine';
-import { capitalizeFirstLetter } from '../../utils/text';
 import { trpc } from '../../utils/trpc';
 import { AppProps } from '../_app';
 
-const numberFormatter = new Intl.NumberFormat('en-US', {
-	style: 'currency',
-	currency: 'PHP',
-	maximumSignificantDigits: 2,
-});
-
-interface EntryTableProps {
-	entries: TreatmentEntry[];
+interface TabPanelContainerProps {
+	children: React.ReactNode;
+	action: React.ReactNode;
 }
 
-const EntryTable = ({ entries }: EntryTableProps) => {
-	if (entries.length === 0) {
-		return (
-			<div className='flex h-full flex-col items-center justify-center gap-4'>
-				<EmptyOverlay
-					imageAlt='empty transactions'
-					imageSrc='/assets/empty.svg'
-					title='No transactions yet'
-					description='Add a transaction by clicking the button in the upper right corner!'
-				/>
-			</div>
-		);
-	}
-
+const TabPanelContainer = ({ action, children }: TabPanelContainerProps) => {
 	return (
-		<ScrollArea className='clip-rounded relative flex flex-1' classNames={{ viewport: 'h-full' }}>
-			<TableContainer>
-				<TableHeader>
-					<tr>
-						<TableHeaderCell className='w-2/12 break-words'>Date</TableHeaderCell>
-						<TableHeaderCell className='w-4/12 break-words'>Tooth</TableHeaderCell>
-						<TableHeaderCell className='w-4/12 break-words'>Service</TableHeaderCell>
-						<TableHeaderCell className='w-2/12 break-words text-right'>Fees</TableHeaderCell>
-					</tr>
-				</TableHeader>
-				<tbody>
-					{entries.map((entry) => (
-						<TableRow key={entry.id}>
-							<TableCell>
-								<p>{dayjs(entry.date).format('MMMM DD, YYYY')}</p>
-							</TableCell>
-							<TableCell>
-								<p>{entry.tooth}</p>
-							</TableCell>
-							<TableCell>
-								<p className='whitespace-pre'>{entry.service}</p>
-							</TableCell>
-							<TableCell className='text-right'>
-								<p>{numberFormatter.format(entry.fees)}</p>
-							</TableCell>
-						</TableRow>
-					))}
-				</tbody>
-			</TableContainer>
-		</ScrollArea>
+		<div className='mt-0 flex h-full flex-col gap-4'>
+			<div className='flex justify-between'>
+				<Link href='/'>
+					<Button variant='ghost' leftIcon={<ArrowLeftIcon className='h-5 w-5 text-primary-600' />}>
+						Back
+					</Button>
+				</Link>
+
+				{action}
+			</div>
+			{children}
+		</div>
 	);
 };
 
-const getAge = (dateOfBirth: Date) => {
-	const date = dayjs(dateOfBirth);
-	return dayjs().diff(date, 'year');
+interface MobileRecordPageProps {
+	data: Record & {
+		entries: TreatmentEntry[];
+	};
+	onActionClick: EntryTableProps['onActionClick'];
+	onEditRecord: () => void;
+	onAddTransaction: () => void;
+}
+
+const MobileRecordPage = ({ data, onActionClick, onEditRecord, onAddTransaction }: MobileRecordPageProps) => {
+	return (
+		<Tabs defaultValue='record' variant='default'>
+			<Tabs.List grow>
+				<Tabs.Tab value='record'>Record</Tabs.Tab>
+				<Tabs.Tab value='transactions'>Transactions</Tabs.Tab>
+				<Tabs.Tab value='files'>Files</Tabs.Tab>
+			</Tabs.List>
+			<Tabs.Panel value='record'>
+				<TabPanelContainer
+					action={
+						<Button onClick={onEditRecord} leftIcon={<Pencil1Icon className='h-5 w-5' />}>
+							Edit Record
+						</Button>
+					}
+				>
+					<RecordInfoPanel data={data} />
+				</TabPanelContainer>
+			</Tabs.Panel>
+			<Tabs.Panel value='transactions'>
+				<TabPanelContainer
+					action={
+						<Button onClick={onAddTransaction} leftIcon={<PlusIcon />}>
+							Add Transaction
+						</Button>
+					}
+				>
+					<TransactionPanel data={data} onActionClick={onActionClick} />
+				</TabPanelContainer>
+			</Tabs.Panel>
+		</Tabs>
+	);
 };
 
 const RecordPage: NextPage<AppProps> = () => {
 	const router = useRouter();
 	const modals = useModals();
+	const isSmallBreakpoint = useIsSmallBreakpoint();
 	const id = router.query.id as string;
 	const utils = trpc.useContext();
 	const { status } = useSession();
@@ -92,19 +95,11 @@ const RecordPage: NextPage<AppProps> = () => {
 	const { mutate: editRecord, isLoading: isEditRecordLoading } = trpc.useMutation(['record.edit'], {
 		onSuccess: () => {
 			utils.invalidateQueries(['record.specific', id]);
-			showNotification({
-				status: 'success',
-				title: 'Edit Record',
-				message: "Successfully edited patient's records.",
-			});
+			showRecordNotification('editSuccess');
 		},
 		onError: (error) => {
 			console.log(error);
-			showNotification({
-				status: 'error',
-				title: 'Error',
-				message: 'An error occurred while adding patient to records.',
-			});
+			showRecordNotification('editError');
 		},
 	});
 	const { mutate: addTransaction, isLoading: isAddTransactionLoading } = trpc.useMutation(['transaction.add'], {
@@ -125,21 +120,71 @@ const RecordPage: NextPage<AppProps> = () => {
 			});
 		},
 	});
-	const isLoading = isGetRecordLoading || isEditRecordLoading || isAddTransactionLoading;
+	const { mutate: deleteTransaction, isLoading: isDeleteTransactionLoading } = trpc.useMutation(
+		['transaction.delete'],
+		{
+			onSuccess: () => {
+				utils.invalidateQueries(['record.specific', id]);
+				showNotification({
+					status: 'success',
+					title: 'Delete Transaction',
+					message: 'Successfully deleted the transaction.',
+				});
+			},
+			onError: (error) => {
+				console.log(error);
+				showNotification({
+					status: 'error',
+					title: 'Error',
+					message: 'An error occurred while deleting the transaction.',
+				});
+			},
+		}
+	);
+	const { mutate: editTransaction, isLoading: isEditTransactionLoading } = trpc.useMutation(['transaction.edit'], {
+		onSuccess: () => {
+			utils.invalidateQueries(['record.specific', id]);
+			showNotification({
+				status: 'success',
+				title: 'Edit Transaction',
+				message: 'Successfully edited the transaction.',
+			});
+		},
+		onError: (error) => {
+			console.log(error);
+			showNotification({
+				status: 'error',
+				title: 'Error',
+				message: 'An error occurred while editing the transaction.',
+			});
+		},
+	});
+	const isLoading =
+		isGetRecordLoading ||
+		isEditRecordLoading ||
+		isAddTransactionLoading ||
+		isDeleteTransactionLoading ||
+		isEditTransactionLoading;
 
-	const handleAddTransaction = () => {
+	const handleOpenTransactionForm = (entry?: TreatmentEntry) => {
+		console.log(entry);
+
 		const modalId = modals.openModal({
-			title: 'Add Transaction',
+			title: `${entry ? 'Edit' : 'Add'} Transaction`,
 			children: (
 				<TransactionForm
+					existingData={entry}
 					onSubmit={(values) => {
 						modals.closeModal(modalId);
-						addTransaction({ ...values, recordId: id });
+						return entry
+							? editTransaction({ ...values, id: entry.id })
+							: addTransaction({ ...values, recordId: id });
 					}}
 					onClose={() => modals.closeModal(modalId)}
 				/>
 			),
-			className: '[&_.mantine-Modal-modal]:w-[768px]',
+			className: 'w-auto sm:[&_.mantine-Modal-modal]:w-[768px]',
+			fullScreen: isSmallBreakpoint,
 		});
 	};
 
@@ -160,74 +205,116 @@ const RecordPage: NextPage<AppProps> = () => {
 					onClose={() => modals.closeModal(modalId)}
 				/>
 			),
-			className: '[&_.mantine-Modal-modal]:w-[768px]',
+			className: 'w-auto sm:[&_.mantine-Modal-modal]:w-[768px]',
+			fullScreen: isSmallBreakpoint,
 		});
+	};
+
+	const handleActionClick: EntryTableProps['onActionClick'] = (type, entry) => {
+		if (type === 'edit') {
+			handleOpenTransactionForm(entry);
+		}
+
+		if (type === 'delete') {
+			const modalId = modals.openModal({
+				title: 'Delete record',
+				children: (
+					<>
+						<p className='text-primary-600'>Are you sure you want to delete this transaction?</p>
+						<div className='mt-4 flex justify-end gap-4'>
+							<Button variant='outlined' onClick={() => modals.closeModal(modalId)}>
+								Cancel
+							</Button>
+							<Button
+								onClick={() => {
+									modals.closeModal(modalId);
+									deleteTransaction(entry.id);
+								}}
+							>
+								Delete Record
+							</Button>
+						</div>
+					</>
+				),
+			});
+		}
 	};
 
 	if (status === 'unauthenticated') {
 		router.replace('/sign-in');
 	}
 
-	return (
-		<div className='min-h-screen bg-slate-100'>
-			<main className='container m-auto flex h-screen p-8'>
-				<div className='relative flex w-full flex-1 flex-col gap-8'>
-					<LoadingOverlay visible={isLoading} />
-					{data && (
-						<div className='flex h-full divide-x-2 divide-slate-200 rounded bg-white shadow-md'>
-							<div className='flex flex-1 flex-col'>
-								<div className='m-4 flex justify-between'>
-									<Link href='/'>
-										<Button
-											variant='ghost'
-											leftIcon={<ArrowLeftIcon className='h-5 w-5 text-slate-600' />}
-										>
-											Go back
-										</Button>
-									</Link>
+	if (isLoading) {
+		return <LoadingOverlay className='mt-16' visible />;
+	}
 
-									<Button
-										variant='secondary'
-										onClick={handleEditRecord}
-										leftIcon={<Pencil1Icon className='h-5 w-5' />}
-									>
-										Edit Record
-									</Button>
-								</div>
-								<ScrollArea classNames={{ root: 'my-4 flex-1 overflow-hidden' }}>
-									<div className='mx-4 flex flex-col gap-4'>
-										<TextInput value={data.name} label='Name' readOnly />
-										<TextInput value={data.occupation} label='Occupation' readOnly />
-										<TextInput value={data.address} label='Address' readOnly />
-										<div className='flex gap-4 [&>*]:flex-1'>
-											<TextInput
-												value={dayjs(data.birthday).format('MMMM DD, YYYY')}
-												label='Birthday'
-												readOnly
-											/>
-											<TextInput value={getAge(data.birthday)} label='Age' readOnly />
-										</div>
-										<div className='flex gap-4 [&>*]:flex-1'>
-											<TextInput value={data.telephone} label='Telephone' readOnly />
-											<TextInput
-												value={capitalizeFirstLetter(data.status)}
-												label='Status'
-												readOnly
-											/>
-										</div>
-										<TextInput value={data.complaint} label='Complaint' readOnly />
+	return (
+		<div className='h-[calc(100vh-64px)] bg-primary-50'>
+			<main className='container m-auto flex h-full overflow-hidden p-6 sm:py-6 sm:px-0'>
+				<div className='relative flex w-full flex-1 flex-col gap-8'>
+					{data && (
+						<div className='flex h-full flex-col sm:flex-row'>
+							{isSmallBreakpoint ? (
+								<MobileRecordPage
+									data={data}
+									onActionClick={handleActionClick}
+									onEditRecord={handleEditRecord}
+									onAddTransaction={() => handleOpenTransactionForm()}
+								/>
+							) : (
+								<>
+									<div className='flex flex-col gap-4'>
+										<RecordInfoPanel
+											data={data}
+											header={
+												<div className='m-4 flex justify-between'>
+													<Link href='/'>
+														<Button
+															variant='ghost'
+															leftIcon={
+																<ArrowLeftIcon className='h-5 w-5 text-primary-600' />
+															}
+														>
+															Back
+														</Button>
+													</Link>
+
+													<Button
+														variant='secondary'
+														onClick={handleEditRecord}
+														leftIcon={<Pencil1Icon className='h-5 w-5' />}
+													>
+														Edit Record
+													</Button>
+												</div>
+											}
+										/>
 									</div>
-								</ScrollArea>
-							</div>
-							<div className='flex-[2] bg-slate-50 rounded-r p-4 flex flex-col gap-4'>
-								<div className='flex justify-between items-center'>
-									<p className='text-xl text-slate-700'>Transactions</p>
-									<Button onClick={handleAddTransaction} leftIcon={<PlusIcon />}>
-										Add Transaction
-									</Button>
-								</div>
-								<EntryTable entries={data?.entries ?? []} />
-							</div>
+									<div className='ml-4 flex flex-1 flex-col gap-4'>
+										<Tabs defaultValue='transactions' classNames={{ root: 'w-full', tab: 'px-6' }}>
+											<Tabs.List>
+												<Tabs.Tab value='transactions'>Transactions</Tabs.Tab>
+												<Tabs.Tab value='files'>Files</Tabs.Tab>
+											</Tabs.List>
+											<Tabs.Panel value='transactions'>
+												<div className='flex h-full flex-col items-start justify-between gap-4 overflow-hidden'>
+													<Button
+														onClick={() => handleOpenTransactionForm()}
+														leftIcon={<PlusIcon />}
+													>
+														Add Transaction
+													</Button>
+													<TransactionPanel
+														className='h-[calc(100%-56px)] w-full'
+														data={data}
+														onActionClick={handleActionClick}
+													/>
+												</div>
+											</Tabs.Panel>
+										</Tabs>
+									</div>
+								</>
+							)}
 						</div>
 					)}
 				</div>
